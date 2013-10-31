@@ -15,8 +15,8 @@ Check out the finished product at [run.south.im](http://run.south.im/).
 To get the code on your system and install the required dependencies:
 
 ``` bash
-git clone git@github.com:smallmultiples/wds2013.git
-cd wds2013
+git clone git@github.com:smallmultiples/south.im.git
+cd south.im
 npm install
 ```
 
@@ -81,13 +81,13 @@ The song included in the credits is
 other work!
 
 It's also worth taking a look at
-[`hackers.txt`](https://github.com/jiak/wds2013/blob/master/hackers.txt)
+[`hackers.txt`](https://github.com/smallmultiples/south.im/blob/master/hackers.txt)
 for a full list of the authors whose modules were used in the project.
 
 ## License ##
 
 Unless otherwise specified, all source code is licensed under the MIT license
-included [in this repository](http://github.com/jiak/wds2013/blob/master/MIT-LICENSE.md).
+included [in this repository](http://github.com/smallmultiples/south.im/blob/master/MIT-LICENSE.md).
 
 Certain project-specific files have been licensed under the
 [Mozilla Public License](http://www.mozilla.org/MPL/2.0/index.txt). These files are stated as such explicitly at the beginning of the file in question.

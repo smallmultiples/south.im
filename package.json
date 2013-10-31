@@ -1,5 +1,5 @@
 {
-  "name": "wds2013",
+  "name": "south-im",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
@@ -93,10 +93,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/jiak/wds2013.git"
+    "url": "git://github.com/jiak/smallmultiples/south.im.git"
   },
   "bugs": {
-    "url": "https://github.com/jiak/wds2013/issues"
+    "url": "https://github.com/jiak/smallmultiples/south.im/issues"
   },
   "licenses": [
     {
