@@ -3,17 +3,7 @@ bundle.js
 npm-debug.log
 .DS_Store
 *.mtl
-disc.html
 single.html
-wds.min.js
 dist/wds.html
-dist/terrain-chunk-*.png
-dist/terrain.png
-dist/colony
-dist/lut-*.png
-dist/luts.json
 *.psd
 lib/presets
-dist/preload.min.js
-dist/tweakable-wds.min.js
-dist/tweakable-preload.min.js
