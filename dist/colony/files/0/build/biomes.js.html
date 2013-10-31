@@ -1,0 +1,272 @@
+<h1>biomes.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> perlin = require(<span class="string">'perlin'</span>).noise.perlin2
+<span class="keyword">var</span> clamp = require(<span class="string">'clamp'</span>)
+
+<span class="keyword">var</span> typeCount = biomes.length = <span class="number">9</span>
+
+<span class="keyword">const</span> TYPE_NORMAL = <span class="number">0</span>
+<span class="keyword">const</span> TYPE_SIDEINTRO = <span class="number">1</span>
+<span class="keyword">const</span> TYPE_INTRO = <span class="number">2</span>
+<span class="keyword">const</span> TYPE_BUBBLEGUM = <span class="number">3</span>
+<span class="keyword">const</span> TYPE_CITY = <span class="number">4</span>
+<span class="keyword">const</span> TYPE_CANYON = <span class="number">5</span>
+<span class="keyword">const</span> TYPE_FOREST = <span class="number">6</span>
+<span class="keyword">const</span> TYPE_DESERT = <span class="number">7</span>
+<span class="keyword">const</span> TYPE_PLATEAU = <span class="number">8</span>
+
+module.exports = biomes
+
+<span class="keyword">var</span> points = biomes.points = [{
+  x: <span class="number">0</span>, z: <span class="number">0</span>, r: <span class="number">40</span>, type: +TYPE_INTRO|<span class="number">0</span>
+}, {
+  x: <span class="number">0</span>, z: <span class="number">40</span>, r: <span class="number">25</span>, type: +TYPE_SIDEINTRO|<span class="number">0</span>
+}, {
+  x: <span class="number">0</span>, z: <span class="number">278</span>, r: <span class="number">40</span>, type: +TYPE_BUBBLEGUM|<span class="number">0</span>
+}, {
+  x: <span class="number">0</span>, z: <span class="number">360</span>, r: <span class="number">30.5</span>, type: +TYPE_CITY|<span class="number">0</span>
+},  {
+  x: <span class="number">0</span>, z: <span class="number">355</span>, r: <span class="number">30.5</span>, type: +TYPE_CITY|<span class="number">0</span>
+}, {
+  x: <span class="number">0</span>, z: <span class="number">428</span>, r: <span class="number">38</span>, type: +TYPE_CANYON|<span class="number">0</span>
+}, {
+  x: <span class="number">0</span>, z: <span class="number">146</span>, r: <span class="number">36</span>, type: +TYPE_FOREST|<span class="number">0</span>
+}, {
+  x: <span class="number">0</span>, z: <span class="number">210</span>, r: <span class="number">37</span>, type: +TYPE_DESERT|<span class="number">0</span>
+}, {
+  x: <span class="number">0</span>, z: <span class="number">210</span>, r: <span class="number">37</span>, type: +TYPE_DESERT|<span class="number">0</span>
+}, {
+  x: -<span class="number">7.65</span>, z: <span class="number">400</span>, r: <span class="number">3.5</span>, type: +TYPE_PLATEAU|<span class="number">0</span>
+}]
+
+<span class="keyword">var</span> pointCount = points.length
+<span class="keyword">var</span> scratch = <span class="keyword">new</span> Float32Array(typeCount)
+
+<span class="function"><span class="keyword">function</span> <span class="title">biomes</span><span class="params">(x, z)</span> {</span>
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; typeCount; i += <span class="number">1</span>) {
+    scratch[i] = <span class="number">0</span>
+  }
+
+  scratch[TYPE_NORMAL] = <span class="number">0.25</span>
+
+  <span class="comment">// Circular "biomes", though they're not really</span>
+  <span class="comment">// biomes. The terrain isn't infinite but predetermined,</span>
+  <span class="comment">// so it's OK not to use Worley noise or something</span>
+  <span class="comment">// similar.</span>
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; pointCount; i += <span class="number">1</span>) {
+    <span class="keyword">var</span> pt = points[i]
+    <span class="keyword">var</span> dx = (pt.x - x)
+    <span class="keyword">var</span> dz = (pt.z - z)
+    <span class="keyword">var</span> d = Math.sqrt(dx*dx+dz*dz)
+    <span class="keyword">var</span> type = pt.type || TYPE_NORMAL
+    <span class="keyword">var</span> val = clamp(<span class="number">1</span> - (d) / (pt.r), <span class="number">0</span>, <span class="number">1</span>)
+    scratch[type] += val
+  }
+
+  <span class="comment">// Normalize</span>
+  <span class="keyword">var</span> total = <span class="number">0</span>
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; typeCount; i += <span class="number">1</span>) {
+    total += scratch[i]
+  }
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; typeCount; i += <span class="number">1</span>) {
+    scratch[i] /= total
+  }
+
+  <span class="keyword">return</span> scratch
+}
+
+<span class="keyword">const</span> LARGE_WAVE = require(<span class="string">'../config.json'</span>).terrain.large.wave
+<span class="keyword">const</span> LARGE_AMP  = require(<span class="string">'../config.json'</span>).terrain.large.amp
+<span class="keyword">const</span> HUGE_WAVE  = require(<span class="string">'../config.json'</span>).terrain.huge.wave
+<span class="keyword">const</span> HUGE_AMP   = require(<span class="string">'../config.json'</span>).terrain.huge.amp
+<span class="keyword">const</span> MAIN_WAVE  = require(<span class="string">'../config.json'</span>).terrain.main.wave
+<span class="keyword">const</span> MAIN_AMP   = require(<span class="string">'../config.json'</span>).terrain.main.amp
+<span class="keyword">const</span> SMALL_WAVE = require(<span class="string">'../config.json'</span>).terrain.small.wave
+<span class="keyword">const</span> SMALL_AMP  = require(<span class="string">'../config.json'</span>).terrain.small.amp
+<span class="keyword">const</span> TINY_WAVE  = require(<span class="string">'../config.json'</span>).terrain.tiny.wave
+<span class="keyword">const</span> TINY_AMP   = require(<span class="string">'../config.json'</span>).terrain.tiny.amp
+
+<span class="keyword">const</span> DESERT_WAVE = <span class="number">0.1</span>
+<span class="keyword">const</span> DESERT_AMP = <span class="number">1</span>
+
+<span class="comment">//</span>
+<span class="comment">// The standard terrain to use when there aren't any</span>
+<span class="comment">// biomes overriding the current one.</span>
+<span class="comment">//</span>
+biomes[TYPE_NORMAL] = <span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(HUGE_WAVE * x, HUGE_WAVE * y) * HUGE_AMP)
+    + (perlin(LARGE_WAVE * x, LARGE_WAVE * y) * LARGE_AMP)
+    + (perlin(SMALL_WAVE * x, SMALL_WAVE * y) * SMALL_AMP)
+    + (perlin(TINY_WAVE  * x, TINY_WAVE  * y) * TINY_AMP)
+    + (perlin(MAIN_WAVE  * x, MAIN_WAVE  * y) * MAIN_AMP)
+  ) + <span class="number">10</span>) / <span class="number">200</span>
+}
+
+biomes[TYPE_NORMAL].foliage = <span class="string">'trees'</span>
+biomes[TYPE_NORMAL].density = <span class="number">2</span>
+biomes[TYPE_NORMAL].roughness = <span class="number">1</span>
+
+<span class="comment">//</span>
+<span class="comment">// Slightly higher and bumpier terrain around</span>
+<span class="comment">// the origin at the very beginning, so that the</span>
+<span class="comment">// egg can descend down into the first scene.</span>
+<span class="comment">//</span>
+biomes[TYPE_SIDEINTRO] = <span class="function"><span class="keyword">function</span> <span class="title">desert</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(DESERT_WAVE * x, DESERT_WAVE * y) * DESERT_AMP)
+    + (perlin(HUGE_WAVE * x, HUGE_WAVE * y) * HUGE_AMP * <span class="number">2</span>)
+    + (perlin(LARGE_WAVE * x, LARGE_WAVE * y) * LARGE_AMP)
+    + (perlin(MAIN_WAVE  * x, MAIN_WAVE  * y) * MAIN_AMP)
+  ) + <span class="number">10</span>) / <span class="number">200</span>
+}
+
+biomes[TYPE_SIDEINTRO].foliage = <span class="string">'trees'</span>
+biomes[TYPE_SIDEINTRO].density = <span class="number">1</span>
+biomes[TYPE_SIDEINTRO].roughness = <span class="number">1.1</span>
+
+biomes[TYPE_INTRO] = <span class="function"><span class="keyword">function</span> <span class="title">city</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(DESERT_WAVE/<span class="number">2</span> * x, DESERT_WAVE/<span class="number">2</span> * y) * DESERT_AMP)
+    + (perlin(HUGE_WAVE/<span class="number">2</span> * x, HUGE_WAVE/<span class="number">2</span> * y) * HUGE_AMP)
+    + (perlin(LARGE_WAVE/<span class="number">2</span> * x, LARGE_WAVE/<span class="number">2</span> * y) * LARGE_AMP)
+    + (perlin(MAIN_WAVE/<span class="number">2</span>  * x, MAIN_WAVE  * y) * MAIN_AMP)
+  ) + <span class="number">10</span>) / <span class="number">150</span>
+}
+
+biomes[TYPE_INTRO].foliage = <span class="string">'trees'</span>
+biomes[TYPE_INTRO].density = <span class="number">1</span>
+biomes[TYPE_INTRO].roughness = <span class="number">1.25</span>
+
+<span class="comment">//</span>
+<span class="comment">// A little flatter and less sharp then</span>
+<span class="comment">// the standard terrain for "bubblegum",</span>
+<span class="comment">// the pinkish scene between the desert</span>
+<span class="comment">// and the city.</span>
+<span class="comment">//</span>
+biomes[TYPE_BUBBLEGUM] = <span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(HUGE_WAVE * x, HUGE_WAVE * y) * HUGE_AMP)
+    + (perlin(LARGE_WAVE * x, LARGE_WAVE * y) * LARGE_AMP)
+    + (perlin(SMALL_WAVE * x, SMALL_WAVE * y) * SMALL_AMP)
+    + (perlin(TINY_WAVE  * x, TINY_WAVE  * y) * TINY_AMP)
+    + (perlin(MAIN_WAVE  * x, MAIN_WAVE  * y) * MAIN_AMP)
+  ) * <span class="number">0.7</span> + <span class="number">10</span>) / <span class="number">200</span>
+}
+
+biomes[TYPE_BUBBLEGUM].foliage = <span class="string">'trees'</span>
+biomes[TYPE_BUBBLEGUM].density = <span class="number">4</span>
+biomes[TYPE_BUBBLEGUM].roughness = <span class="number">0.05</span>
+
+<span class="comment">//</span>
+<span class="comment">// Mostly flat terrain for the city</span>
+<span class="comment">//</span>
+biomes[TYPE_CITY] = <span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(HUGE_WAVE * x, HUGE_WAVE * y) * HUGE_AMP)
+    + (perlin(LARGE_WAVE * x, LARGE_WAVE * y) * LARGE_AMP)
+    + (perlin(SMALL_WAVE * x * <span class="number">0.5</span>, SMALL_WAVE * y * <span class="number">0.5</span>) * SMALL_AMP)
+    + (perlin(TINY_WAVE  * x, TINY_WAVE  * y) * TINY_AMP)
+    + (perlin(MAIN_WAVE  * x, MAIN_WAVE  * y) * MAIN_AMP * <span class="number">1.2</span>)
+  ) * <span class="number">0.2</span> + <span class="number">10</span>) / <span class="number">200</span>
+}
+
+biomes[TYPE_CITY].foliage = <span class="string">'buildings'</span>
+biomes[TYPE_CITY].density = <span class="number">1.8</span>
+biomes[TYPE_CITY].safezone = <span class="number">0.7</span>
+biomes[TYPE_CITY].roughness = <span class="number">0.8</span>
+
+
+<span class="comment">//</span>
+<span class="comment">// Forms the terrain for the mountain at the end</span>
+<span class="comment">// of the animation.</span>
+<span class="comment">//</span>
+biomes[TYPE_CANYON] = <span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(HUGE_WAVE * x, HUGE_WAVE * y) * HUGE_AMP)
+    + (perlin(LARGE_WAVE * x, LARGE_WAVE * y) * LARGE_AMP)
+    + (perlin(SMALL_WAVE * x * <span class="number">0.5</span>, SMALL_WAVE * y * <span class="number">0.5</span>) * SMALL_AMP)
+    + (perlin(TINY_WAVE  * x, TINY_WAVE  * y) * TINY_AMP)
+    + (perlin(MAIN_WAVE  * x, MAIN_WAVE  * y) * MAIN_AMP * <span class="number">1.2</span>)
+  ) * <span class="number">1.05</span> + <span class="number">10.55</span>) / <span class="number">200</span>
+}
+
+biomes[TYPE_CANYON].foliage = <span class="string">'trees'</span>
+biomes[TYPE_CANYON].density = <span class="number">1.2</span>
+biomes[TYPE_CANYON].roughness = <span class="number">3.05</span>
+
+<span class="comment">//</span>
+<span class="comment">// Equivalent to the normal type of terrain,</span>
+<span class="comment">// but with a much higher "density" value which</span>
+<span class="comment">// results in a lot more trees in this scene.</span>
+<span class="comment">//</span>
+biomes[TYPE_FOREST] = <span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(HUGE_WAVE * x, HUGE_WAVE * y) * HUGE_AMP)
+    + (perlin(LARGE_WAVE * x, LARGE_WAVE * y) * LARGE_AMP)
+    + (perlin(SMALL_WAVE * x, SMALL_WAVE * y) * SMALL_AMP)
+    + (perlin(TINY_WAVE  * x, TINY_WAVE  * y) * TINY_AMP)
+    + (perlin(MAIN_WAVE  * x, MAIN_WAVE  * y) * MAIN_AMP * <span class="number">1.2</span>)
+  ) + <span class="number">10</span>) / <span class="number">200</span>
+}
+
+biomes[TYPE_FOREST].foliage = <span class="string">'trees'</span>
+biomes[TYPE_FOREST].density = <span class="number">10</span>
+biomes[TYPE_FOREST].roughness = <span class="number">1.225</span>
+
+<span class="comment">//</span>
+<span class="comment">// The desert/dusk biome plants cacti amongst</span>
+<span class="comment">// the trees, and is a little more sparse/flat</span>
+<span class="comment">// then the standard terrain.</span>
+<span class="comment">//</span>
+biomes[TYPE_DESERT] = <span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> dx = x
+  <span class="keyword">var</span> dy = y
+  <span class="keyword">var</span> d = Math.sqrt(dx*dx+dy*dy)
+  <span class="keyword">return</span> ((
+    + (perlin(HUGE_WAVE * x, HUGE_WAVE * y) * HUGE_AMP)
+    + (perlin(LARGE_WAVE * x, LARGE_WAVE * y) * LARGE_AMP)
+    + (perlin(SMALL_WAVE * x, SMALL_WAVE * y) * SMALL_AMP)
+    + (perlin(TINY_WAVE  * x, TINY_WAVE  * y) * TINY_AMP)
+    + (perlin(MAIN_WAVE  * x, MAIN_WAVE  * y) * MAIN_AMP * <span class="number">1.2</span>)
+  ) + <span class="number">10</span>) / <span class="number">200</span>
+}
+
+biomes[TYPE_DESERT].foliage = <span class="string">'cacti'</span>
+biomes[TYPE_DESERT].density = <span class="number">0.8</span>
+biomes[TYPE_DESERT].roughness = <span class="number">0.8</span>
+
+<span class="comment">//</span>
+<span class="comment">// Used to flatten out the terrain at the tip</span>
+<span class="comment">// of the mountain at the end of the animation,</span>
+<span class="comment">// so we can place "WDS13" and make it more</span>
+<span class="comment">// readable.</span>
+<span class="comment">//</span>
+biomes[TYPE_PLATEAU] = <span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">return</span> <span class="number">10.75</span> / <span class="number">200</span>
+}
+
+biomes[TYPE_PLATEAU].foliage = <span class="string">'cacti'</span>
+biomes[TYPE_PLATEAU].density = <span class="number">0.0</span>
+biomes[TYPE_PLATEAU].roughness = <span class="number">0.0</span>
+</code></pre>

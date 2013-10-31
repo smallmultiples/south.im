@@ -1,0 +1,12 @@
+<h1>beats.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> detect = require(<span class="string">'beats'</span>)([
+  { lo: <span class="number">0</span>, hi: <span class="number">32</span>, threshold: <span class="number">140</span>, decay: <span class="number">0.001</span> }
+], <span class="number">500</span>)
+
+module.exports = <span class="keyword">function</span>(shell) {
+  <span class="keyword">return</span> <span class="keyword">function</span>(dt) {
+    shell.audio.frequencies(shell.frequencies)
+    <span class="keyword">return</span> detect(shell.frequencies, dt)
+  }
+}
+</code></pre>

@@ -1,0 +1,58 @@
+<h1>terrain-mesher.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> perlin = require(<span class="string">'perlin'</span>).noise.perlin2
+<span class="keyword">var</span> biomes = require(<span class="string">'../build/biomes'</span>)
+<span class="keyword">var</span> downsample = require(<span class="string">'ndarray-downsample2x'</span>)
+<span class="keyword">var</span> heightmap = require(<span class="string">'heightmap-mesher'</span>)
+<span class="keyword">var</span> normalify = require(<span class="string">'mesh-normals'</span>)
+<span class="keyword">var</span> terrain = require(<span class="string">'./terrain'</span>)
+<span class="keyword">var</span> ndarray = require(<span class="string">'ndarray'</span>)
+<span class="keyword">var</span> zeros = require(<span class="string">'zeros'</span>)
+
+<span class="keyword">const</span> CHUNK_LOD_LEVELS = require(<span class="string">'../config.json'</span>).terrain.lod
+<span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> WOBBLE = (
+  require(<span class="string">'../config.json'</span>).terrain.wobble /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size
+)
+
+module.exports = require(<span class="string">'worker-query/child'</span>)(<span class="keyword">function</span>(data, callback) {
+  <span class="keyword">var</span> xoff = data.x * (CHUNK_SIZE - <span class="number">1</span>)
+  <span class="keyword">var</span> yoff = data.y * (CHUNK_SIZE - <span class="number">1</span>)
+  <span class="keyword">var</span> array = ndarray(data.array, [CHUNK_SIZE, CHUNK_SIZE])
+  <span class="keyword">var</span> map = heightmap(array)
+  <span class="keyword">var</span> normals = normalify(map)
+  <span class="keyword">var</span> transfer = [normals.buffer, map.buffer]
+
+  <span class="keyword">if</span> (!!WOBBLE)
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; map.length; i += <span class="number">1</span>) {
+    map[i] += perlin(<span class="number">47.3298</span>, <span class="number">389.0239</span> + map[i] * <span class="number">87.324</span>) * WOBBLE
+  }
+
+  <span class="keyword">var</span> lastmip = array
+  <span class="keyword">var</span> maps = [{positions:map,normals:normals}]
+
+  <span class="keyword">if</span> (!!CHUNK_LOD_LEVELS)
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">1</span>; i &lt;= CHUNK_LOD_LEVELS; i += <span class="number">1</span>) {
+    <span class="keyword">var</span> size = CHUNK_SIZE >> i
+    <span class="keyword">var</span> mip = zeros([size, size])
+    downsample(mip, lastmip)
+
+    <span class="keyword">for</span> (<span class="keyword">var</span> x = <span class="number">0</span>; x &lt; size; x++)
+    <span class="keyword">for</span> (<span class="keyword">var</span> y = <span class="number">0</span>; y &lt; size; y++) {
+      <span class="keyword">if</span> (x &amp;&amp; y &amp;&amp; x+<span class="number">1</span> !== size &amp;&amp; y+<span class="number">1</span> !== size) <span class="keyword">continue</span>
+      <span class="keyword">var</span> c = i
+      <span class="keyword">var</span> _x = Math.round(i/<span class="number">2</span>)*<span class="number">2</span>
+      <span class="keyword">var</span> _y = Math.round(i/<span class="number">2</span>)*<span class="number">2</span>
+      mip.data[x*size+y] = (terrain((x&lt;&lt;c)+(<span class="number">1</span>&lt;&lt;c)*(x?<span class="number">0.5</span>:-<span class="number">0.5</span>)+xoff, (y&lt;&lt;c)+(<span class="number">1</span>&lt;&lt;c)*(y?<span class="number">0.5</span>:-<span class="number">0.5</span>)+yoff))
+    }
+
+    <span class="keyword">var</span> mesh = heightmap(mip)
+    <span class="keyword">var</span> mnorm = normalify(mesh)
+    maps[i] = {positions:mesh,normals:mnorm}
+    transfer.push(mesh.buffer, mnorm.buffer)
+    lastmip = mip
+  }
+
+  callback(<span class="literal">null</span>, maps, transfer)
+})
+</code></pre>

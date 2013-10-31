@@ -1,0 +1,7 @@
+<h1>water.frag</h1>
+<pre><code class="lang-js"><span class="preprocessor">#pragma import: ./common</span>
+
+<span class="keyword">void</span> main() {
+  <span class="built_in">gl_FragColor</span> = <span class="built_in">mix</span>(<span class="keyword">vec4</span>(vLightWeighting, <span class="number">1.0</span>), FOG_COLOR, fogAmount());
+}
+</code></pre>

@@ -1,0 +1,62 @@
+<h1>lighting.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> normalize = require(<span class="string">'vectors/normalize'</span>)(<span class="number">3</span>)
+
+module.exports = LightSystem
+
+<span class="function"><span class="keyword">function</span> <span class="title">LightSystem</span><span class="params">(options)</span> {</span>
+  <span class="keyword">if</span> (!(<span class="keyword">this</span> <span class="keyword">instanceof</span> LightSystem)) <span class="keyword">return</span> <span class="keyword">new</span> LightSystem(options)
+
+  options = options || {}
+  <span class="keyword">var</span> directionals = options.directionals || <span class="number">2</span>
+  <span class="keyword">var</span> points = options.points || <span class="number">2</span>
+
+  <span class="keyword">this</span>.ambient = <span class="keyword">new</span> Float32Array([<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>])
+  <span class="keyword">this</span>.lights = []
+  <span class="keyword">this</span>.points = []
+  <span class="keyword">this</span>.directionals = []
+
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; directionals; i += <span class="number">1</span>) {
+    <span class="keyword">var</span> d = <span class="keyword">new</span> DirectionalLight(i)
+    <span class="keyword">this</span>.lights.push(d)
+    <span class="keyword">this</span>.directionals.push(d)
+  }
+
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; points; i += <span class="number">1</span>) {
+    <span class="keyword">var</span> d = <span class="keyword">new</span> PointLight(i)
+    <span class="keyword">this</span>.lights.push(d)
+    <span class="keyword">this</span>.points.push(d)
+  }
+}
+
+LightSystem.prototype.bind = <span class="keyword">function</span>(shader) {
+  shader.uniforms.uAmbientLight = <span class="keyword">this</span>.ambient
+  <span class="keyword">var</span> i = <span class="keyword">this</span>.lights.length
+  <span class="keyword">while</span> (i--) <span class="keyword">this</span>.lights[i].bind(shader)
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">PointLight</span><span class="params">(id)</span> {</span>
+  <span class="keyword">this</span>.id = id
+  <span class="keyword">this</span>.color = <span class="keyword">new</span> Float32Array(<span class="number">3</span>)
+  <span class="keyword">this</span>.colorKey = <span class="string">'uPLightCol_'</span> + id
+  <span class="keyword">this</span>.position = <span class="keyword">new</span> Float32Array(<span class="number">3</span>)
+  <span class="keyword">this</span>.positionKey = <span class="string">'uPLightPos_'</span> + id
+}
+
+PointLight.prototype.bind = <span class="keyword">function</span>(shader) {
+  shader.uniforms[<span class="keyword">this</span>.colorKey] = <span class="keyword">this</span>.color
+  shader.uniforms[<span class="keyword">this</span>.positionKey] = <span class="keyword">this</span>.position
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">DirectionalLight</span><span class="params">(id)</span> {</span>
+  <span class="keyword">this</span>.id = id
+  <span class="keyword">this</span>.colorKey = <span class="string">'uDLightCol_'</span> + id
+  <span class="keyword">this</span>.color = <span class="keyword">new</span> Float32Array(<span class="number">3</span>)
+  <span class="keyword">this</span>.directionKey = <span class="string">'uDLightDir_'</span> + id
+  <span class="keyword">this</span>.direction = <span class="keyword">new</span> Float32Array(<span class="number">3</span>)
+}
+
+DirectionalLight.prototype.bind = <span class="keyword">function</span>(shader) {
+  shader.uniforms[<span class="keyword">this</span>.colorKey] = <span class="keyword">this</span>.color
+  shader.uniforms[<span class="keyword">this</span>.directionKey] = <span class="keyword">this</span>.direction
+}
+</code></pre>

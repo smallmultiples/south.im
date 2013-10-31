@@ -1,0 +1,22 @@
+<h1>combine-mesh.js</h1>
+<pre><code class="lang-js"><span class="comment">// Takes a series of arrays and combines them</span>
+<span class="comment">// into a single `Float32Array`. Used for quickly</span>
+<span class="comment">// combining meshes imported from Blender.</span>
+
+module.exports = combine
+
+<span class="function"><span class="keyword">function</span> <span class="title">combine</span><span class="params">(arrs)</span> {</span>
+  <span class="keyword">var</span> size = arrs.reduce(<span class="keyword">function</span>(a, b) {
+    <span class="keyword">return</span> a + b.length
+  }, <span class="number">0</span>)
+
+  <span class="keyword">var</span> arr = <span class="keyword">new</span> Float32Array(size)
+  <span class="keyword">var</span> n = <span class="number">0</span>
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; arrs.length; i += <span class="number">1</span>)
+  <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; arrs[i].length; j++) {
+    arr[n++] = arrs[i][j]
+  }
+
+  <span class="keyword">return</span> arr
+}
+</code></pre>

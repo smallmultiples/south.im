@@ -1,0 +1,155 @@
+<h1>index.js</h1>
+<pre><code class="lang-js"><span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
+
+<span class="keyword">const</span> MINIMAP = require(<span class="string">'./config.json'</span>).minimap
+<span class="keyword">const</span> TIMELINE = require(<span class="string">'./config.json'</span>).timeline
+<span class="keyword">const</span> CACHE_CHUNKS = require(<span class="string">'./config.json'</span>).terrain.cache
+<span class="keyword">const</span> ORIGIN = require(<span class="string">'./config.json'</span>).generator.units / <span class="number">2</span>
+<span class="keyword">const</span> UNITS = require(<span class="string">'./config.json'</span>).generator.units
+<span class="keyword">const</span> UNIT_CHUNKS = (
+  require(<span class="string">'./config.json'</span>).generator.units /
+  require(<span class="string">'./config.json'</span>).generator.chunk
+)
+
+<span class="keyword">var</span> createBadge = require(<span class="string">'soundcloud-badge'</span>)
+<span class="keyword">var</span> grades = require(<span class="string">'./dist/luts.json'</span>)
+<span class="keyword">var</span> analyser = require(<span class="string">'web-audio-analyser'</span>)
+<span class="keyword">var</span> getPixels = require(<span class="string">'get-pixels'</span>)
+<span class="keyword">var</span> loaded = require(<span class="string">'image-loaded'</span>)
+<span class="keyword">var</span> s = require(<span class="string">'./lib/space'</span>)
+<span class="keyword">var</span> rgb = require(<span class="string">'rgb-pack'</span>)
+<span class="keyword">var</span> once = require(<span class="string">'once'</span>)
+<span class="keyword">var</span> images = []
+<span class="keyword">var</span> shell
+
+<span class="keyword">for</span> (<span class="keyword">var</span> x = <span class="number">0</span>; x &lt; UNIT_CHUNKS; x += <span class="number">1</span>)
+<span class="keyword">for</span> (<span class="keyword">var</span> y = <span class="number">0</span>; y &lt; UNIT_CHUNKS; y += <span class="number">1</span>) {
+  images.push({
+      x: x
+    , y: y
+    , src: <span class="string">'dist/terrain-chunk-'</span>+prefix(x)+<span class="string">'x'</span>+prefix(y)+<span class="string">'.png'</span>
+  })
+}
+
+<span class="keyword">var</span> gradeImages = {}
+require(<span class="string">'map-async'</span>)(grades, <span class="keyword">function</span>(url, name, next) {
+  getPixels(url, <span class="keyword">function</span>(err, data) {
+    <span class="keyword">if</span> (err) <span class="keyword">return</span> next(err)
+    gradeImages[name] = data.step(-<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>)
+    next()
+  })
+}, <span class="keyword">function</span>(err) {
+  <span class="keyword">if</span> (err) <span class="keyword">throw</span> err
+  prepareMinimap()
+})
+
+<span class="keyword">var</span> terrain_chunks = []
+<span class="keyword">var</span> MINI_SIZE = <span class="number">250</span>
+<span class="keyword">var</span> minimap = document.createElement(<span class="string">'img'</span>)
+<span class="keyword">var</span> miniwrap = document.createElement(<span class="string">'div'</span>)
+<span class="keyword">var</span> minihere = document.createElement(<span class="string">'div'</span>)
+
+<span class="function"><span class="keyword">function</span> <span class="title">prepareMinimap</span><span class="params">()</span> {</span>
+  miniwrap.style.border = <span class="string">'1px solid #fff'</span>
+
+  minihere.style.background = <span class="string">'#f00'</span>
+  minihere.style.width =
+  minihere.style.height = <span class="string">'4px'</span>
+  minihere.style.position = <span class="string">'absolute'</span>
+  minihere.style.top =
+  minihere.style.left = (MINI_SIZE/<span class="number">2</span>-<span class="number">2</span>) + <span class="string">'px'</span>
+
+  <span class="keyword">if</span> (!!MINIMAP) {
+    minimapLoaded()
+  } <span class="keyword">else</span> {
+    loaded(minimap, minimapLoaded)
+    minimap.src = <span class="string">'dist/terrain.png'</span>
+  }
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">minimapLoaded</span><span class="params">()</span> {</span>
+  miniwrap.style.position = <span class="string">'absolute'</span>
+  miniwrap.style.zIndex = <span class="number">9</span>
+  miniwrap.style.bottom = TIMELINE ? <span class="string">'50px'</span> : <span class="string">'20px'</span>
+  miniwrap.style.left = <span class="string">'20px'</span>
+  miniwrap.style.width = MINI_SIZE + <span class="string">'px'</span>
+  miniwrap.style.height = MINI_SIZE + <span class="string">'px'</span>
+  miniwrap.style.overflow = <span class="string">'hidden'</span>
+
+  minimap.style.position = <span class="string">'absolute'</span>
+  minimap.style.top = <span class="number">0</span>
+  minimap.style.left = <span class="number">0</span>
+
+  updateMinimap(ORIGIN, ORIGIN)
+  <span class="function"><span class="keyword">function</span> <span class="title">updateMinimap</span><span class="params">(x, y)</span> {</span>
+    minimap.style.left = (MINI_SIZE/<span class="number">2</span>-x) + <span class="string">'px'</span>
+    minimap.style.top = (MINI_SIZE/<span class="number">2</span>-y) + <span class="string">'px'</span>
+  }
+
+  miniwrap.appendChild(minimap)
+  miniwrap.appendChild(minihere)
+  <span class="keyword">if</span> (!!MINIMAP) document.body.appendChild(miniwrap)
+
+  require(<span class="string">'map-async'</span>)(images, <span class="keyword">function</span>(chunk, i, next) {
+    setTimeout(<span class="keyword">function</span>() {
+      getPixels(chunk.src, <span class="keyword">function</span>(err, data) {
+        <span class="keyword">if</span> (err) <span class="keyword">return</span> next(err)
+        console.log(<span class="string">'downloaded heightmap: '</span> + chunk.src)
+        terrain_chunks[chunk.x] = terrain_chunks[chunk.x] || []
+        terrain_chunks[chunk.x][chunk.y] = rgb.unpack(data)
+        next()
+      })
+    }, <span class="number">10</span> * i)
+  }, <span class="keyword">function</span>(err) {
+    <span class="keyword">if</span> (err) <span class="keyword">throw</span> err
+
+    createBadge({
+        song: <span class="string">'https://soundcloud.com/thomasbarrandon/clones'</span>
+      , client_id: <span class="string">'ded451c6d8f9ff1c62f72523f49dab68'</span>
+      , dark: <span class="literal">false</span>
+      , getFonts: <span class="literal">true</span>
+    }, gotSong)
+
+    <span class="function"><span class="keyword">function</span> <span class="title">gotSong</span><span class="params">(err, src, data, div)</span> {</span>
+      <span class="keyword">if</span> (err) <span class="keyword">throw</span> err
+      <span class="keyword">var</span> audio = <span class="keyword">new</span> Audio
+      <span class="keyword">var</span> ready = once(startup)
+
+      <span class="keyword">if</span> (div) {
+        console.log(<span class="string">'got song metadata.'</span>)
+        div.style.display = <span class="string">'none'</span>
+      }
+
+      audio.addEventListener(<span class="string">'canplay'</span>, ready)
+      audio.addEventListener(<span class="string">'ended'</span>, ended)
+      setTimeout(ready, <span class="number">5000</span>)
+      audio.src = src
+
+      <span class="function"><span class="keyword">function</span> <span class="title">startup</span><span class="params">(e)</span> {</span>
+        console.log(<span class="string">'starting!'</span>)
+        shell = window.shell = require(<span class="string">'./lib/shell'</span>)
+        shell.song = audio
+        shell.amplitude = <span class="number">0</span>
+        shell.waveform = <span class="keyword">new</span> Uint8Array(<span class="number">1024</span>)
+        shell.frequencies = <span class="keyword">new</span> Uint8Array(<span class="number">512</span>)
+        shell.audio = analyser(audio)
+        shell.chunkCache = terrain_chunks
+        shell.minimap = updateMinimap
+        shell.grades = gradeImages
+      }
+
+      <span class="function"><span class="keyword">function</span> <span class="title">ended</span><span class="params">()</span> {</span>
+        shell.finished()
+      }
+    }
+  })
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">prefix</span><span class="params">(n)</span> {</span>
+  n = String(n)
+  <span class="keyword">while</span> (n.length &lt; <span class="number">3</span>) n = <span class="string">'0'</span> + n
+  <span class="keyword">return</span> n
+}
+</code></pre>

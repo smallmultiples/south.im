@@ -1,0 +1,33 @@
+<h1>water.vert</h1>
+<pre><code class="lang-js"><span class="preprocessor">#pragma import: ./common</span>
+<span class="preprocessor">#pragma glslify: noise3 = require(../node_modules/glsl-noise/simplex/3d)</span>
+
+<span class="keyword">uniform</span> <span class="keyword">vec3</span> uWaterColor;
+
+<span class="keyword">vec3</span> getColor() {
+  <span class="keyword">return</span> <span class="keyword">vec3</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
+}
+
+<span class="keyword">void</span> main() {
+  <span class="comment">//</span>
+  <span class="comment">// We're using perlin noise here to create small waves</span>
+  <span class="comment">// that move over time. The more natural alternative would</span>
+  <span class="comment">// be to use sine waves but this is less uniform.</span>
+  <span class="comment">//</span>
+  <span class="keyword">float</span> noise = <span class="built_in">noise3</span>(aPosition * <span class="number">30.0</span> + t * <span class="number">0.05</span>) * <span class="number">0.001</span>;
+  <span class="keyword">vec3</span> pos = aPosition + <span class="keyword">vec3</span>(noise*<span class="number">5.0</span>, noise, noise*<span class="number">5.0</span>);
+  <span class="built_in">gl_Position</span> = uProjection * uView * uModel * <span class="keyword">vec4</span>(pos, <span class="number">1.0</span>);
+
+  <span class="comment">//</span>
+  <span class="comment">// To make it stand out from the terrain (and given that</span>
+  <span class="comment">// it's also emitting light), the water doesn't have lighting</span>
+  <span class="comment">// applied to it.</span>
+  <span class="comment">//</span>
+  vLightWeighting = uWaterColor * <span class="built_in">mix</span>(
+      <span class="keyword">vec3</span>(<span class="number">1.0</span>)
+    , <span class="keyword">vec3</span>(<span class="number">0.8</span>)
+    , <span class="built_in">max</span>(<span class="number">0.0</span>, <span class="built_in">dot</span>(getNormal() + noise, <span class="keyword">vec3</span>(<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>)))
+  );
+}
+
+</code></pre>

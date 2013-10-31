@@ -1,0 +1,129 @@
+<h1>speaker-manager.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+
+<span class="keyword">var</span> camera = require(<span class="string">'./camera-position'</span>)
+<span class="keyword">var</span> decode = require(<span class="string">'tab64'</span>).decode
+<span class="keyword">var</span> faceNormals = require(<span class="string">'mesh-normals'</span>)
+<span class="keyword">var</span> createBuffer = require(<span class="string">'gl-buffer'</span>)
+<span class="keyword">var</span> createVAO = require(<span class="string">'gl-vao'</span>)
+<span class="keyword">var</span> Speaker = require(<span class="string">'./speaker'</span>)
+
+<span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+<span class="keyword">var</span> vec3 = require(<span class="string">'gl-matrix'</span>).vec3
+
+module.exports = SpeakerManager
+
+<span class="function"><span class="keyword">function</span> <span class="title">SpeakerManager</span><span class="params">(gl)</span> {</span>
+  <span class="keyword">if</span> (!(<span class="keyword">this</span> <span class="keyword">instanceof</span> SpeakerManager)) <span class="keyword">return</span> <span class="keyword">new</span> SpeakerManager(gl)
+
+  <span class="keyword">this</span>.gl = gl
+  <span class="keyword">this</span>.speakers = require(<span class="string">'./speaker-models'</span>).sort(<span class="keyword">function</span>(a, b) {
+    <span class="keyword">return</span> a.z - b.z
+  }).map(<span class="keyword">function</span>(speaker) {
+    <span class="keyword">var</span> rotate = speaker.rotate || <span class="number">0</span>
+    <span class="keyword">var</span> meshes = meshify(gl, speaker.model, rotate, speaker.scale)
+    <span class="keyword">if</span> (!speaker.ignore) {
+      camera.slowdowns.push(camera.inverse(speaker.z + ORIGIN - (speaker.tminus || <span class="number">0.15</span>)))
+    }
+    <span class="keyword">return</span> <span class="keyword">new</span> Speaker(gl, speaker.x + ORIGIN, speaker.z + ORIGIN, meshes, speaker)
+  })
+}
+
+SpeakerManager.prototype.render = <span class="keyword">function</span>(shader) {
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="keyword">this</span>.speakers.length; i += <span class="number">1</span>) {
+    <span class="keyword">var</span> speaker = <span class="keyword">this</span>.speakers[i]
+    <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; speaker.meshes.length; j += <span class="number">1</span>) {
+      shader.uniforms.uModel = speaker.matrices[j]
+      speaker.meshes[j].bind()
+      <span class="keyword">this</span>.gl.drawArrays(<span class="keyword">this</span>.gl.TRIANGLES, <span class="number">0</span>, speaker.meshes[j].length)
+    }
+  }
+  speaker.meshes[j-<span class="number">1</span>].unbind()
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">meshify</span><span class="params">(gl, models, rotate, scale)</span> {</span>
+  <span class="keyword">return</span> models.map(<span class="keyword">function</span>(model) {
+    <span class="keyword">var</span> positions = decode(model, <span class="string">'float32'</span>)
+    <span class="keyword">var</span> normals = faceNormals(positions)
+
+    <span class="keyword">var</span> size = positions.length / <span class="number">3</span>
+    <span class="keyword">var</span> cx = <span class="number">0</span>
+    <span class="keyword">var</span> cy = <span class="number">0</span>
+    <span class="keyword">var</span> cz = <span class="number">0</span>
+    <span class="keyword">var</span> i
+
+    <span class="keyword">if</span> (rotate) {
+      <span class="keyword">var</span> transform = mat4.identity(<span class="keyword">new</span> Float32Array(<span class="number">16</span>))
+      mat4.rotateY(transform, transform, rotate)
+      mat4.scale(transform, transform, scale || [<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>])
+
+      <span class="keyword">var</span> vec = [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+      i = <span class="number">0</span>
+      <span class="keyword">while</span> (i &lt; positions.length) {
+        <span class="keyword">var</span> x = i, y = i+<span class="number">1</span>, z = i+<span class="number">2</span>
+        vec[<span class="number">0</span>] = positions[x]
+        vec[<span class="number">1</span>] = positions[y]
+        vec[<span class="number">2</span>] = positions[z]
+        vec = vec3.transformMat4(vec, vec, transform)
+        positions[x] = vec[<span class="number">0</span>]
+        positions[y] = vec[<span class="number">1</span>]
+        positions[z] = vec[<span class="number">2</span>]
+        i += <span class="number">3</span>
+      }
+
+      i = <span class="number">0</span>
+      <span class="keyword">while</span> (i &lt; normals.length) {
+        <span class="keyword">var</span> x = i, y = i+<span class="number">1</span>, z = i+<span class="number">2</span>
+        vec[<span class="number">0</span>] = normals[x]
+        vec[<span class="number">1</span>] = normals[y]
+        vec[<span class="number">2</span>] = normals[z]
+        vec = vec3.transformMat4(vec, vec, transform)
+        normals[x] = vec[<span class="number">0</span>]
+        normals[y] = vec[<span class="number">1</span>]
+        normals[z] = vec[<span class="number">2</span>]
+        i += <span class="number">3</span>
+      }
+    }
+
+    i = <span class="number">0</span>
+    <span class="keyword">while</span> (i &lt; positions.length) {
+      positions[i++] *= <span class="number">0.2</span>
+      positions[i++] *= <span class="number">0.2</span>
+      positions[i++] *= <span class="number">0.2</span>
+    }
+
+    i = <span class="number">0</span>
+    <span class="keyword">while</span> (i &lt; positions.length) {
+      cx += positions[i++] / size
+      cy += positions[i++] / size
+      cz += positions[i++] / size
+    }
+
+    i = <span class="number">0</span>
+    <span class="keyword">while</span> (i &lt; positions.length) {
+      positions[i++] -= cx
+      i++
+      positions[i++] -= cz
+    }
+
+    <span class="keyword">var</span> vao = createVAO(gl, <span class="literal">null</span>, [{
+        type: gl.FLOAT
+      , size: <span class="number">3</span>
+      , buffer: createBuffer(gl, positions)
+    }, {
+        type: gl.FLOAT
+      , size: <span class="number">3</span>
+      , buffer: createBuffer(gl, normals)
+    }])
+
+    vao.length = size
+    vao.center_vertex = <span class="keyword">new</span> Float32Array([cx, cy, cz])
+
+    <span class="keyword">return</span> vao
+  })
+}
+</code></pre>

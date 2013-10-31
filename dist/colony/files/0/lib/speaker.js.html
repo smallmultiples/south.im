@@ -1,0 +1,50 @@
+<h1>speaker.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+<span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+
+<span class="keyword">var</span> quat = require(<span class="string">'gl-matrix'</span>).quat
+<span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+<span class="keyword">var</span> terrain = require(<span class="string">'./terrain'</span>)
+
+module.exports = Speaker
+
+<span class="function"><span class="keyword">function</span> <span class="title">Speaker</span><span class="params">(gl, x, z, meshes, props)</span> {</span>
+  <span class="keyword">this</span>.gl = gl
+  <span class="keyword">this</span>.position = <span class="keyword">new</span> Float32Array([x, terrain(x*(CHUNK_SIZE-<span class="number">1</span>), z*(CHUNK_SIZE-<span class="number">1</span>)), z])
+  <span class="keyword">this</span>.meshes = meshes
+  <span class="keyword">this</span>.matrix = mat4.identity(<span class="keyword">new</span> Float32Array(<span class="number">16</span>))
+
+  <span class="keyword">this</span>.matrices = <span class="keyword">this</span>.meshes.map(<span class="keyword">function</span>(mesh, i) {
+    <span class="keyword">var</span> matrix = mat4.identity(<span class="keyword">new</span> Float32Array(<span class="number">16</span>))
+    <span class="keyword">var</span> X = x - mesh.center_vertex[<span class="number">0</span>]
+    <span class="keyword">var</span> Z = z - mesh.center_vertex[<span class="number">2</span>]
+    <span class="keyword">var</span> normal = terrain.normal(X, Z)
+    <span class="keyword">var</span> pos = [
+        <span class="keyword">this</span>.position[<span class="number">0</span>]
+      , terrain(X*(CHUNK_SIZE-<span class="number">1</span>), Z*(CHUNK_SIZE-<span class="number">1</span>))
+      , <span class="keyword">this</span>.position[<span class="number">2</span>]
+    ]
+
+    mat4.translate(matrix, matrix, pos)
+    mat4.translate(matrix, matrix, [-mesh.center_vertex[<span class="number">0</span>], -props.sink || <span class="number">0</span>, -mesh.center_vertex[<span class="number">2</span>]])
+    mat4.rotateY(matrix, matrix, Math.PI)
+    <span class="keyword">if</span> (props.rx) mat4.rotateX(matrix, matrix, -<span class="number">0.5</span> * normal[<span class="number">0</span>])
+    <span class="keyword">if</span> (props.rz) mat4.rotateZ(matrix, matrix, -<span class="number">0.5</span> * normal[<span class="number">2</span>])
+
+    <span class="keyword">return</span> matrix
+  }.bind(<span class="keyword">this</span>))
+
+  mat4.translate(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, <span class="keyword">this</span>.position)
+  mat4.scale(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, [<span class="number">0.1</span>, <span class="number">0.1</span>, <span class="number">0.1</span>])
+
+  <span class="keyword">var</span> normal = terrain.normal(x, z)
+
+  mat4.rotateX(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, normal[<span class="number">0</span>])
+  mat4.rotateY(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, normal[<span class="number">1</span>])
+  mat4.rotateZ(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, normal[<span class="number">2</span>])
+}
+</code></pre>

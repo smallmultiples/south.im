@@ -1,0 +1,81 @@
+<h1>timeline-ui.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> DURATION = require(<span class="string">'../config.json'</span>).duration
+<span class="keyword">const</span> DISPLAY = require(<span class="string">'../config.json'</span>).timeline
+
+module.exports = <span class="keyword">function</span>(timeline) {
+  <span class="keyword">var</span> el = document.createElement(<span class="string">'div'</span>)
+  <span class="keyword">var</span> progress = document.createElement(<span class="string">'div'</span>)
+  <span class="keyword">var</span> dragger = document.createElement(<span class="string">'div'</span>)
+  <span class="keyword">var</span> timer = document.createElement(<span class="string">'span'</span>)
+  <span class="keyword">var</span> self = {}
+
+  <span class="keyword">if</span> (!DISPLAY) {
+    timer.style.display =
+    el.style.display = <span class="string">'none'</span>
+  }
+
+  el.style.position = <span class="string">'absolute'</span>
+  el.style.backgroundColor = <span class="string">'rgba(255,255,255,0.65)'</span>
+  el.style.height = <span class="string">'30px'</span>
+  el.style.zIndex = <span class="number">999</span>
+  el.style.bottom = <span class="number">0</span>
+  el.style.left = <span class="number">0</span>
+  el.style.right = <span class="number">0</span>
+  el.style.cursor = <span class="string">'pointer'</span>
+
+  timer.style.position = <span class="string">'absolute'</span>
+  timer.style.top = <span class="string">'16px'</span>
+  timer.style.left = <span class="number">0</span>
+  timer.style.right = <span class="number">0</span>
+  timer.style.textAlign = <span class="string">'center'</span>
+  timer.style.fontSize = <span class="string">'24px'</span>
+  timer.innerText = <span class="string">'0'</span>
+
+  dragger.style.position = <span class="string">'absolute'</span>
+  dragger.style.top = <span class="number">0</span>
+  dragger.style.bottom = <span class="number">0</span>
+  dragger.style.width = <span class="string">'2px'</span>
+  dragger.style.marginLeft = <span class="string">'-1px'</span>
+  dragger.style.backgroundColor = <span class="string">'#f00'</span>
+  dragger.style.display = <span class="string">'none'</span>
+
+  progress.style.position = <span class="string">'absolute'</span>
+  progress.style.top = <span class="number">0</span>
+  progress.style.bottom = <span class="number">0</span>
+  progress.style.width = <span class="string">'4px'</span>
+  progress.style.marginLeft = <span class="string">'-2px'</span>
+  progress.style.backgroundColor = <span class="string">'rgba(20, 20, 20, 0.8)'</span>
+
+  <span class="keyword">var</span> dragging = <span class="literal">false</span>
+  el.addEventListener(<span class="string">'mouseover'</span>, <span class="keyword">function</span>(e) {
+    dragger.style.display = <span class="string">'block'</span>
+  }, <span class="literal">false</span>)
+  el.addEventListener(<span class="string">'mouseout'</span>, <span class="keyword">function</span>(e) {
+    dragger.style.display = <span class="string">'none'</span>
+    dragging = <span class="literal">false</span>
+  }, <span class="literal">false</span>)
+  el.addEventListener(<span class="string">'mousemove'</span>, <span class="keyword">function</span>(e) {
+    dragger.style.left = e.x + <span class="string">'px'</span>
+    <span class="keyword">if</span> (dragging) timeline.shell.setTime((e.x / window.innerWidth) * DURATION)
+  }, <span class="literal">true</span>)
+  el.addEventListener(<span class="string">'mousedown'</span>, <span class="keyword">function</span>(e) {
+    dragging = <span class="literal">true</span>
+    timeline.shell.setTime((e.x / window.innerWidth) * DURATION)
+  }, <span class="literal">true</span>)
+  el.addEventListener(<span class="string">'mouseup'</span>, <span class="keyword">function</span>(e) {
+    dragging = <span class="literal">false</span>
+  }, <span class="literal">true</span>)
+
+  document.body.appendChild(el)
+  document.body.appendChild(timer)
+  el.appendChild(progress)
+  el.appendChild(dragger)
+
+  self.tick = <span class="keyword">function</span>(t) {
+    timer.innerText = +t|<span class="number">0</span>
+    <span class="keyword">return</span> progress.style.left = (<span class="number">100</span> * t / DURATION) + <span class="string">'%'</span>
+  }
+
+  <span class="keyword">return</span> self
+}
+</code></pre>

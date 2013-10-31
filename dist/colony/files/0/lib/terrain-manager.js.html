@@ -1,0 +1,178 @@
+<h1>terrain-manager.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> CREATE_RADIUS = require(<span class="string">'../config.json'</span>).terrain.create_radius
+<span class="keyword">const</span> SAFETY_RADIUS = require(<span class="string">'../config.json'</span>).terrain.safety_radius
+<span class="keyword">const</span> CACHE_TERRAIN = require(<span class="string">'../config.json'</span>).terrain.cache
+<span class="keyword">const</span> CACHE_DB_NAME = require(<span class="string">'../config.json'</span>).terrain.cache_name
+<span class="keyword">const</span> VIEW_PADDING = require(<span class="string">'../config.json'</span>).terrain.view_padding
+<span class="keyword">const</span> VIEW_HEIGHT = require(<span class="string">'../config.json'</span>).terrain.view_height
+<span class="keyword">const</span> CHUNK_LOD_LEVELS = require(<span class="string">'../config.json'</span>).terrain.lod
+
+<span class="keyword">var</span> observer = require(<span class="string">'continuous-observer'</span>)
+<span class="keyword">var</span> heightmap = require(<span class="string">'heightmap-mesher'</span>)
+<span class="keyword">var</span> frustum = require(<span class="string">'box-frustum'</span>)
+
+<span class="keyword">var</span> createBuffer = require(<span class="string">'gl-buffer'</span>)
+<span class="keyword">var</span> createVAO = require(<span class="string">'gl-vao'</span>)
+<span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+
+<span class="keyword">var</span> terrain = require(<span class="string">'./terrain'</span>)
+<span class="keyword">var</span> generator = require(<span class="string">'./terrain-generator'</span>)
+
+<span class="keyword">var</span> meshHeightmap = require(<span class="string">'worker-query/parent'</span>)(
+  require(<span class="string">'webworkify'</span>)(require(<span class="string">'./terrain-mesher'</span>))
+)
+
+<span class="comment">/**
+ * Creates a continuous ndarray, which is exported.
+ * This will handle storing the heightmap access and
+ * modification for everything.
+ */</span>
+<span class="keyword">var</span> field = module.exports = require(<span class="string">'ndarray-continuous'</span>)({
+    shape: [CHUNK_SIZE, CHUNK_SIZE]
+  , getter: generator
+})
+
+<span class="comment">/**
+ * continuous-observer will handle creating/removing
+ * terrain chunks in response to camera movement.
+ */</span>
+field.gl = <span class="literal">null</span>
+field.render = render
+field.meshes = []
+field.moveTo = observer(field
+  , CREATE_RADIUS
+  , SAFETY_RADIUS
+)
+
+<span class="comment">/**
+ * Handles the addition/removal of terrain meshes
+ * from the scene as new chunks are spawned.
+ *
+ * Note it's important that anything created
+ * must also be cleaned up afterwards.
+ */</span>
+field
+  .on(<span class="string">'created'</span>, createTerrain)
+  .on(<span class="string">'removed'</span>, removeTerrain)
+
+<span class="keyword">var</span> flagged = {}
+<span class="function"><span class="keyword">function</span> <span class="title">createTerrain</span><span class="params">(chunk)</span> {</span>
+  <span class="keyword">var</span> key = chunk.position.join(<span class="string">':'</span>)
+  flagged[key] = <span class="literal">false</span>
+
+  meshHeightmap({
+      array: chunk.data
+    , x: chunk.position[<span class="number">0</span>]
+    , y: chunk.position[<span class="number">1</span>]
+  }, <span class="keyword">function</span>(err, data) {
+    <span class="keyword">if</span> (flagged[key]) <span class="keyword">return</span> <span class="keyword">delete</span> flagged[key]
+    chunk.meshes = []
+    chunk.mesh = <span class="number">0</span>
+    <span class="keyword">var</span> i = data.length
+    <span class="keyword">while</span> (i--) {
+      ;(chunk.meshes[i] = meshify(
+          data[i].positions
+        , data[i].normals
+      )).chunk = chunk
+    }
+  })
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">removeTerrain</span><span class="params">(chunk)</span> {</span>
+  <span class="keyword">if</span> (!chunk.meshes) <span class="keyword">return</span> flagged[chunk.position.join(<span class="string">':'</span>)] = <span class="literal">true</span>
+  <span class="comment">// var idx = this.meshes.indexOf(chunk.mesh)</span>
+  <span class="comment">// if (idx !== -1) this.meshes.splice(idx, 1)</span>
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; chunk.meshes.length; i += <span class="number">1</span>) {
+    chunk.meshes[i].vertices.dispose()
+    <span class="keyword">delete</span> chunk.meshes[i].chunk
+  }
+  chunk.meshes.length = <span class="number">0</span>
+  <span class="keyword">delete</span> chunk.meshes
+}
+
+<span class="comment">/**
+ * Store once-generated terrain in a IDB
+ * database using level.js. This reduces
+ * the cost of generation  to a consistent
+ * value after "priming" the animation.
+ */</span>
+<span class="keyword">if</span> (!!CACHE_TERRAIN) {
+  <span class="keyword">var</span> storage = require(<span class="string">'continuous-storage'</span>)
+  <span class="keyword">var</span> leveljs = require(<span class="string">'level-js'</span>)
+  <span class="keyword">var</span> levelup = require(<span class="string">'levelup'</span>)
+  <span class="keyword">var</span> db = levelup(CACHE_DB_NAME, {
+    db: leveljs
+  })
+
+  field.storage = storage(db, field)
+  field.on(<span class="string">'created'</span>, <span class="keyword">function</span>(chunk) {
+    <span class="keyword">if</span> (chunk.fresh) field.storage.save(chunk)
+  })
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">meshify</span><span class="params">(positions, normals)</span> {</span>
+  <span class="keyword">var</span> gl = field.gl
+
+  <span class="keyword">var</span> vertices = createVAO(gl, <span class="literal">null</span>, [{
+    buffer: createBuffer(gl, positions)
+    , type: gl.FLOAT
+    , size: <span class="number">3</span>
+  }, {
+    buffer: createBuffer(gl, normals)
+    , type: gl.FLOAT
+    , size: <span class="number">3</span>
+  }])
+
+  <span class="keyword">return</span> { vertices: vertices, length: positions.length / <span class="number">3</span> }
+}
+
+<span class="keyword">var</span> scratch = <span class="keyword">new</span> Float32Array(<span class="number">16</span>)
+<span class="keyword">var</span> scratchvec = <span class="keyword">new</span> Float32Array(<span class="number">3</span>)
+<span class="keyword">var</span> scratchview = <span class="keyword">new</span> Float32Array(<span class="number">16</span>)
+<span class="keyword">var</span> scratchaabb = [[<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>],[<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]]
+
+<span class="function"><span class="keyword">function</span> <span class="title">render</span><span class="params">(shader, projection, view, position)</span> {</span>
+  <span class="keyword">var</span> meshes = <span class="keyword">this</span>.meshes
+  <span class="keyword">var</span> i = <span class="keyword">this</span>.meshes.length
+  <span class="keyword">var</span> gl = <span class="keyword">this</span>.gl
+  <span class="keyword">var</span> latest
+
+  mat4.multiply(scratchview, projection, view)
+  scratchaabb[<span class="number">0</span>][<span class="number">1</span>] = -VIEW_HEIGHT
+  scratchaabb[<span class="number">1</span>][<span class="number">1</span>] = +VIEW_HEIGHT
+  scratchvec[<span class="number">1</span>] = <span class="number">0</span>
+
+  field.each(<span class="keyword">function</span>(chunk) {
+    <span class="keyword">var</span> pos = chunk.position
+
+    scratchvec[<span class="number">0</span>] = pos[<span class="number">0</span>]
+    scratchvec[<span class="number">2</span>] = pos[<span class="number">1</span>]
+    <span class="keyword">if</span> (!chunk.meshes) <span class="keyword">return</span>
+    <span class="keyword">if</span> (!VIEW_PADDING) {
+      <span class="keyword">var</span> mesh = chunk.meshes[<span class="number">0</span>]
+    } <span class="keyword">else</span> {
+      <span class="keyword">var</span> dx = pos[<span class="number">0</span>] - position[<span class="number">0</span>]
+      <span class="keyword">var</span> dy = pos[<span class="number">1</span>] - position[<span class="number">2</span>]
+      <span class="keyword">var</span> d = dx*dx+dy*dy
+      d = Math.abs(d/<span class="number">1</span>)|<span class="number">0</span>
+      d = d > CHUNK_LOD_LEVELS ? CHUNK_LOD_LEVELS : d &lt; <span class="number">0</span> ? <span class="number">0</span> : d
+      <span class="keyword">var</span> mesh = chunk.meshes[d]
+      scratchaabb[<span class="number">0</span>][<span class="number">0</span>] = (scratchvec[<span class="number">0</span>]) - VIEW_PADDING
+      scratchaabb[<span class="number">0</span>][<span class="number">2</span>] = (scratchvec[<span class="number">2</span>]) - VIEW_PADDING
+      scratchaabb[<span class="number">1</span>][<span class="number">0</span>] = (scratchvec[<span class="number">0</span>]) + VIEW_PADDING
+      scratchaabb[<span class="number">1</span>][<span class="number">2</span>] = (scratchvec[<span class="number">2</span>]) + VIEW_PADDING
+    }
+
+    <span class="keyword">if</span> (!VIEW_PADDING || frustum(scratchview, scratchaabb)) {
+      mat4.translate(scratch, mat4.identity(scratch), scratchvec)
+      shader.uniforms.uModel = scratch
+      latest = mesh.vertices
+      latest.bind()
+      gl.drawArrays(gl.TRIANGLES, <span class="number">0</span>, mesh.length)
+    }
+  })
+
+  <span class="keyword">if</span> (latest) latest.unbind()
+}
+</code></pre>

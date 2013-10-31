@@ -1,0 +1,22 @@
+<h1>cubic.js</h1>
+<pre><code class="lang-js"><span class="comment">// @todo clarify licensing requirements for the</span>
+<span class="comment">// cubic interpolation function.</span>
+
+module.exports = cubic
+
+<span class="function"><span class="keyword">function</span> <span class="title">cubic</span><span class="params">(t)</span> {</span>
+  <span class="keyword">var</span> t2 = t * t
+  <span class="keyword">var</span> t3 = t2 * t
+  <span class="keyword">return</span> <span class="number">4</span> * (t &lt; <span class="number">0.5</span> ? t3 : <span class="number">3</span> * (t - t2) + t3 - <span class="number">0.75</span>)
+}
+
+cubic[<span class="string">'out'</span>] = cubicOut
+<span class="function"><span class="keyword">function</span> <span class="title">cubicOut</span><span class="params">(t)</span> {</span>
+  <span class="keyword">return</span> ((--t)*t*t + <span class="number">1</span>)
+}
+
+cubic[<span class="string">'in'</span>] = cubicIn
+<span class="function"><span class="keyword">function</span> <span class="title">cubicIn</span><span class="params">(t)</span> {</span>
+  <span class="keyword">return</span> t*t*t
+}
+</code></pre>

@@ -1,0 +1,47 @@
+<h1>terrain.vert</h1>
+<pre><code class="lang-js"><span class="preprocessor">#pragma import: ./common</span>
+
+<span class="comment">//</span>
+<span class="comment">// Originally the terrain was going to be</span>
+<span class="comment">// colored differently for each scene, but</span>
+<span class="comment">// we found we had better results when adjusting</span>
+<span class="comment">// the lights. We've stuck to the original</span>
+<span class="comment">// green/brown pastel colors as they make</span>
+<span class="comment">// the terrain lighting ever slightly more</span>
+<span class="comment">// contrasted.</span>
+<span class="comment">//</span>
+<span class="keyword">const</span> <span class="keyword">vec4</span> TOP = <span class="keyword">vec4</span>(<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
+<span class="keyword">const</span> <span class="keyword">vec3</span> TERRAIN_SIDE = <span class="keyword">vec3</span>(<span class="number">1.0</span>, <span class="number">0.8</span>, <span class="number">0.6</span>);
+<span class="keyword">const</span> <span class="keyword">vec3</span> TERRAIN_TOP = <span class="keyword">vec3</span>(<span class="number">0.8</span>, <span class="number">1.0</span>, <span class="number">0.6</span>);
+
+<span class="keyword">vec3</span> getColor() {
+  <span class="keyword">float</span> lerper = <span class="built_in">max</span>(<span class="number">0.0</span>, <span class="built_in">dot</span>(aNormal.xyz, TOP.xyz));
+  <span class="keyword">return</span> <span class="built_in">mix</span>(TERRAIN_SIDE, TERRAIN_TOP, <span class="built_in">pow</span>(lerper, <span class="number">1.25</span>));
+}
+
+<span class="comment">//</span>
+<span class="comment">// The water emits a soft glow onto the terrain which</span>
+<span class="comment">// is more noticeable in dark environments. Totally</span>
+<span class="comment">// fake lighting here however it has a nice effect.</span>
+<span class="comment">//</span>
+<span class="keyword">uniform</span> <span class="keyword">float</span> uWaterLevel;
+<span class="keyword">uniform</span> <span class="keyword">vec3</span>  uWaterColor;
+
+<span class="keyword">vec3</span> getWaterLight(<span class="keyword">vec3</span> norm) {
+  <span class="keyword">return</span> (<span class="number">1.0</span> - <span class="built_in">clamp</span>(<span class="built_in">dot</span>(norm, <span class="keyword">vec3</span>(<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>)), <span class="number">0.0</span>, <span class="number">1.0</span>))
+    * uWaterColor
+    * <span class="built_in">clamp</span>((uWaterLevel - aPosition.y) * <span class="number">12.5</span>, <span class="number">0.0</span>, <span class="number">1.0</span>)
+    ;
+}
+
+<span class="keyword">void</span> main() {
+  <span class="built_in">gl_Position</span> = uProjection * uView * uModel * <span class="keyword">vec4</span>(aPosition, <span class="number">1.0</span>);
+
+  <span class="keyword">vec3</span> norm = getNormal();
+
+  vLightWeighting = getLighting(norm
+    , (uModel * <span class="keyword">vec4</span>(aPosition, <span class="number">1.0</span>)).xyz
+  ) * getColor() + getWaterLight(norm);
+}
+
+</code></pre>

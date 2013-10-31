@@ -1,0 +1,10 @@
+<h1>duration.js</h1>
+<pre><code class="lang-js">module.exports = duration
+
+<span class="function"><span class="keyword">function</span> <span class="title">duration</span><span class="params">(start, end)</span> {</span>
+  end -= start
+  <span class="keyword">return</span> <span class="keyword">function</span>(t) {
+    <span class="keyword">return</span> start + end * t
+  }
+}
+</code></pre>

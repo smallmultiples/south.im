@@ -1,0 +1,11 @@
+<h1>timeline-range.js</h1>
+<pre><code class="lang-js">module.exports = <span class="keyword">function</span>(between, fn) {
+  <span class="keyword">return</span> between.on(<span class="string">'data'</span>, <span class="keyword">function</span>(t) {
+    fn(t)
+  }).on(<span class="string">'start'</span>, <span class="keyword">function</span>(t) {
+    fn(<span class="number">0</span>)
+  }).on(<span class="string">'end'</span>, <span class="keyword">function</span>(t) {
+    fn(<span class="number">1</span>)
+  })
+}
+</code></pre>

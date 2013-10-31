@@ -1,0 +1,137 @@
+<h1>tree-models.js</h1>
+<pre><code class="lang-js"><span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
+
+<span class="keyword">var</span> models = module.exports = {}
+
+models.trees = [{
+  model: require(<span class="string">'../models/trees/tree.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">6</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree1.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree2.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree3.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree4.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree18.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.035</span>
+  , stump: <span class="number">1</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree13.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">2</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree5.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">0</span>
+}]
+
+models.buildings = [{
+  model: require(<span class="string">'../models/buildings/building1.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building3.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building4.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building5.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.035</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building12.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building7.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building8.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building9.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/buildings/building10.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.39</span>
+  , sink: <span class="number">0.175</span>
+  , stump: <span class="number">0</span>
+}]
+
+models.cacti = [{
+  model: require(<span class="string">'../models/rocks-bushes/rock1.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.05</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree2.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.09</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/tree2.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.08</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/cactus4.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.08</span>
+  , stump: <span class="number">0</span>
+  , sink: <span class="number">0.025</span>
+}, {
+  model: require(<span class="string">'../models/trees/cactus.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.07</span>
+  , stump: <span class="number">0</span>
+}, {
+  model: require(<span class="string">'../models/trees/cactus.obj'</span>)
+  , dynamic: <span class="literal">false</span>
+  , scale: <span class="number">0.07</span>
+  , stump: <span class="number">0</span>
+}]
+</code></pre>

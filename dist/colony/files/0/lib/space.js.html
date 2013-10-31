@@ -1,0 +1,37 @@
+<h1>space.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> ORIGIN = require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span>
+<span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> SCALE = require(<span class="string">'../config.json'</span>).generator.scale
+<span class="keyword">const</span> MAP_SIZE = (
+  require(<span class="string">'../config.json'</span>).generator.chunk
+)
+<span class="keyword">const</span> CHUNKOVERMAP = (
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size /
+  require(<span class="string">'../config.json'</span>).generator.chunk
+)
+
+<span class="comment">// For converting between various unit sizes.</span>
+<span class="comment">//</span>
+<span class="comment">// * chunk: the terrain mesh chunks.</span>
+<span class="comment">// * poly: individual cells in the live heightmap.</span>
+<span class="comment">// * map: pixels in the pregenerated heightmap image.</span>
+<span class="comment">//</span>
+<span class="comment">// Added too late in the project - should've been</span>
+<span class="comment">// added in the beginning, and it would've been used</span>
+<span class="comment">// more and made for much more legible code.</span>
+
+exports.chunk = {
+    poly: <span class="keyword">function</span>(x) { <span class="keyword">return</span> x * CHUNK_SIZE }
+  , map: <span class="keyword">function</span>(x) { <span class="keyword">return</span> x * SCALE }
+}
+
+exports.poly = {
+    chunk: <span class="keyword">function</span>(x) { <span class="keyword">return</span> x / CHUNK_SIZE }
+  , map: <span class="keyword">function</span>(x) { <span class="keyword">return</span> x / MAP_SIZE }
+}
+
+exports.map = {
+    chunk: <span class="keyword">function</span>(x) { <span class="keyword">return</span> x / SCALE }
+  , poly: <span class="keyword">function</span>(x) { <span class="keyword">return</span> x * MAP_SIZE }
+}
+</code></pre>

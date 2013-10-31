@@ -1,0 +1,208 @@
+<h1>speaker-models.js</h1>
+<pre><code class="lang-js"><span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
+
+<span class="keyword">var</span> camera = require(<span class="string">'./camera-position'</span>)
+
+<span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+
+window.camera = camera
+
+module.exports = [{
+    model: require(<span class="string">'../models/speakers/anna-gerber.obj'</span>)
+  , z: <span class="number">16</span>, x: <span class="number">0.3</span>
+  , tminus: <span class="number">0.15</span>
+  , flip: <span class="literal">true</span>
+  , rz: <span class="literal">true</span>
+  , rotate: Math.PI*<span class="number">0.75</span>
+}, {
+    model: require(<span class="string">'../models/speakers/adam-ahmed.obj'</span>)
+  , z: camera(<span class="number">35000</span>) - ORIGIN, x: <span class="number">0</span>
+  , flip: <span class="literal">true</span>
+  , rx: <span class="literal">true</span>
+  , rotate: Math.PI * <span class="number">1.1</span>
+}, {
+    model: require(<span class="string">'../models/speakers/aarron-walter.obj'</span>)
+  , z: camera(<span class="number">40000</span>) - ORIGIN, x: <span class="number">0</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.35</span>
+  , rotate: Math.PI * <span class="number">0.9</span>
+}, {
+    model: require(<span class="string">'../models/speakers/andrew-betts.obj'</span>)
+  , z: <span class="number">24.5</span>, x: -<span class="number">0.3</span>
+  , flip: <span class="literal">true</span>
+  , rz: <span class="literal">true</span>
+  , tminus: -<span class="number">0.05</span>
+  , rotate: Math.PI
+}, {
+    model: require(<span class="string">'../models/speakers/axel-rauschmayer.obj'</span>)
+  , z: camera(<span class="number">50500</span>) - ORIGIN, x: -<span class="number">0.3</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.35</span>
+  , rotate: Math.PI * <span class="number">1.35</span>
+}, {
+    model: require(<span class="string">'../models/speakers/david-demaree.obj'</span>)
+  , z: camera(<span class="number">55000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: -<span class="number">0.001</span>
+  , rotate: Math.PI * <span class="number">1.2</span>
+}, {
+    model: require(<span class="string">'../models/speakers/relly-annett-baker.obj'</span>)
+  , z: camera(<span class="number">61500</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">1.55</span>
+}, {
+    model: require(<span class="string">'../models/speakers/glen-maddern.obj'</span>)
+  , z: camera(<span class="number">65000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">1.75</span>
+  , scale: [<span class="number">1.3</span>, <span class="number">1.3</span>, <span class="number">1.3</span>]
+}, {
+    model: require(<span class="string">'../models/speakers/michael-neale.obj'</span>)
+  , z: camera(<span class="number">75000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">1.55</span>
+}, {
+    model: require(<span class="string">'../models/speakers/simon-elvery.obj'</span>)
+  , z: camera(<span class="number">78000</span>) - ORIGIN, x: <span class="number">0.05</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: <span class="number">0</span>
+}, {
+    model: require(<span class="string">'../models/speakers/fiona-chan.obj'</span>)
+  , z: camera(<span class="number">85000</span>) - ORIGIN, x: <span class="number">0.3</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">0.2</span>
+}, {
+    model: require(<span class="string">'../models/speakers/ryan-seddon.obj'</span>)
+  , z: camera(<span class="number">88000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.2</span>
+  , rotate: Math.PI * -<span class="number">0.1</span>
+}, {
+    model: require(<span class="string">'../models/speakers/maciej-ceglowski.obj'</span>)
+  , z: camera(<span class="number">98500</span>) - ORIGIN, x: <span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.4</span>, <span class="number">1.4</span>, <span class="number">1.4</span>]
+  , rotate: Math.PI * <span class="number">0.5</span>
+}, {
+    model: require(<span class="string">'../models/speakers/karl-fast.obj'</span>)
+  , z: camera(<span class="number">100000</span>) - ORIGIN, x: -<span class="number">0.15</span>
+  , flip: <span class="literal">true</span>
+  , tminus: -<span class="number">0.05</span>
+  , scale: [<span class="number">1.5</span>, <span class="number">1.5</span>, <span class="number">1.5</span>]
+  , rotate: Math.PI * <span class="number">0.5</span>
+}, {
+    model: require(<span class="string">'../models/speakers/rachel-binx.obj'</span>)
+  , z: camera(<span class="number">105000</span>) - ORIGIN, x: -<span class="number">0.05</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.5</span>, <span class="number">1.5</span>, <span class="number">1.5</span>]
+  , rotate: Math.PI * <span class="number">0.6</span>
+}, {
+    model: require(<span class="string">'../models/speakers/jared-wyles.obj'</span>)
+  , z: camera(<span class="number">110000</span>) - ORIGIN, x: <span class="number">0.05</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.5</span>, <span class="number">1.5</span>, <span class="number">1.5</span>]
+  , rotate: Math.PI * <span class="number">0.55</span>
+}, {
+    model: require(<span class="string">'../models/speakers/chris-lienert.obj'</span>)
+  , z: camera(<span class="number">114500</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">0.65</span>
+}, {
+    model: require(<span class="string">'../models/speakers/john-allsopp.obj'</span>)
+  , z: camera(<span class="number">120000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.25</span>, <span class="number">1.25</span>, <span class="number">1.25</span>]
+  , rotate: Math.PI * <span class="number">1.25</span>
+}, {
+    model: require(<span class="string">'../models/speakers/dhanji-prassana.obj'</span>)
+  , z: camera(<span class="number">125000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">1.05</span>
+}, {
+    model: require(<span class="string">'../models/speakers/scott-jenson.obj'</span>)
+  , z: camera(<span class="number">135000</span>) - ORIGIN, x: <span class="number">0.05</span>
+  , flip: <span class="literal">true</span>
+  , tminus: -<span class="number">0.05</span>
+  , scale: [<span class="number">1.2</span>, <span class="number">1.2</span>, <span class="number">1.2</span>]
+  , rotate: Math.PI * <span class="number">1.15</span>
+}, {
+    model: require(<span class="string">'../models/speakers/alexandra-deschamps-sonsino.obj'</span>)
+  , z: camera(<span class="number">140000</span>) - ORIGIN, x: <span class="number">0.05</span>
+  , flip: <span class="literal">true</span>
+  , tminus: -<span class="number">0.05</span>
+  , scale: [<span class="number">0.8</span>,<span class="number">0.8</span>,<span class="number">0.8</span>]
+  , rotate: Math.PI * <span class="number">1.45</span>
+}, {
+    model: require(<span class="string">'../models/speakers/golden-krishna.obj'</span>)
+  , z: camera(<span class="number">145000</span>) - ORIGIN, x: <span class="number">0.05</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.6</span>,<span class="number">1.6</span>,<span class="number">1.6</span>]
+  , rotate: Math.PI * <span class="number">1.55</span>
+}, {
+    model: require(<span class="string">'../models/speakers/rod-farmer.obj'</span>)
+  , z: camera(<span class="number">149600</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.2</span>, <span class="number">1.2</span>, <span class="number">1.2</span>]
+  , rotate: Math.PI * <span class="number">1.55</span>
+}, {
+    model: require(<span class="string">'../models/speakers/mark-dalgeish.obj'</span>)
+  , z: camera(<span class="number">155000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">1.55</span>
+}, {
+    model: require(<span class="string">'../models/speakers/troy-hunt.obj'</span>)
+  , z: camera(<span class="number">160000</span>) - ORIGIN, x: -<span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.5</span>, <span class="number">1.5</span>, <span class="number">1.5</span>]
+  , rotate: Math.PI * <span class="number">1.55</span>
+}, {
+    model: require(<span class="string">'../models/speakers/pasquale-d-silva.obj'</span>)
+  , z: camera(<span class="number">164500</span>) - ORIGIN, x: <span class="number">0.025</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: <span class="number">0</span>
+}, {
+    model: require(<span class="string">'../models/speakers/heather-gold.obj'</span>)
+  , z: camera(<span class="number">170000</span>) - ORIGIN, x: -<span class="number">0.15</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , rotate: Math.PI * <span class="number">1.95</span>
+}, {
+    model: require(<span class="string">'../models/speakers/patrick-catanzariti.obj'</span>)
+  , z: camera(<span class="number">185450</span>) - ORIGIN, x: <span class="number">0.25</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.25</span>, <span class="number">1.25</span>, <span class="number">1.25</span>]
+  , rotate: Math.PI * -<span class="number">1.5</span>
+}, {
+    model: require(<span class="string">'../models/wds13.obj'</span>)
+  , z: camera(<span class="number">191648</span>) - ORIGIN, x: <span class="number">0.9</span>
+  , flip: <span class="literal">true</span>
+  , tminus: <span class="number">0.15</span>
+  , scale: [<span class="number">1.1</span>, <span class="number">1.1</span>, <span class="number">1.1</span>]
+  , rotate: Math.PI * <span class="number">0.435</span> <span class="comment">// 0.6</span>
+  , ignore: <span class="literal">true</span>
+  , sink: <span class="number">0.05</span>
+}]
+</code></pre>

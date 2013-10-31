@@ -1,0 +1,428 @@
+<h1>shell.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+<span class="keyword">const</span> START_BUTTON = require(<span class="string">'../config.json'</span>).start_button
+<span class="keyword">const</span> CONTROLLABLE = require(<span class="string">'../config.json'</span>).controllable
+<span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> SCALE = require(<span class="string">'../config.json'</span>).generator.scale
+<span class="keyword">const</span> POST_PROCESSING = require(<span class="string">'../config.json'</span>).postprocessing
+<span class="keyword">const</span> TWEAKABLE = require(<span class="string">'../config.json'</span>).tweakable
+<span class="keyword">const</span> MINIMAP = require(<span class="string">'../config.json'</span>).minimap
+<span class="keyword">const</span> PRESET = require(<span class="string">'../config.json'</span>).preset
+<span class="keyword">const</span> LOOP = require(<span class="string">'../config.json'</span>).loop
+<span class="keyword">const</span> CAMERA_ROTATION = <span class="number">0.0025</span> / <span class="number">1000</span> * <span class="number">30</span>
+<span class="keyword">const</span> ANGLE_OFFSET = Math.PI
+<span class="keyword">const</span> CAMERA_DRAG = <span class="number">1</span> - <span class="number">0.25</span>
+<span class="keyword">const</span> CAMERA_ANGLE = <span class="number">0.125</span>
+<span class="keyword">const</span> EGG_DRAG = <span class="number">1</span> - <span class="number">0.75</span>
+<span class="keyword">const</span> MUTE = require(<span class="string">'../config.json'</span>).mute
+
+<span class="keyword">var</span> gldefines = require(<span class="string">'glsl-defines'</span>)
+<span class="keyword">var</span> defines = <span class="string">''</span>
++ gldefines(require(<span class="string">'../config.json'</span>).defines_list)
++ gldefines(require(<span class="string">'../config.json'</span>).defines_values)
+
+<span class="keyword">var</span> cameraPosition = require(<span class="string">'./camera-position'</span>)
+<span class="keyword">var</span> createTexture = require(<span class="string">'gl-texture2d'</span>)
+<span class="keyword">var</span> createCamera = require(<span class="string">'orbit-camera'</span>)
+<span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+<span class="keyword">var</span> quat = require(<span class="string">'gl-matrix'</span>).quat
+<span class="keyword">var</span> vec3 = require(<span class="string">'gl-matrix'</span>).vec3
+<span class="keyword">var</span> mousetrap = require(<span class="string">'mousetrap'</span>)
+<span class="keyword">var</span> h = require(<span class="string">'hyperscript'</span>)
+<span class="keyword">var</span> now = require(<span class="string">'right-now'</span>)
+<span class="keyword">var</span> once = require(<span class="string">'once'</span>)
+<span class="keyword">var</span> lut = require(<span class="string">'lut'</span>)
+<span class="keyword">var</span> abs = Math.abs
+
+<span class="keyword">var</span> normalize = require(<span class="string">'vectors/normalize'</span>)(<span class="number">3</span>)
+<span class="keyword">var</span> detection = require(<span class="string">'./detect-error'</span>)
+<span class="keyword">var</span> terrain = require(<span class="string">'./terrain'</span>)
+<span class="keyword">var</span> meshify = require(<span class="string">'./meshify'</span>)
+<span class="keyword">var</span> logo = require(<span class="string">'./logo'</span>)
+<span class="keyword">var</span> s = require(<span class="string">'./space'</span>)
+<span class="keyword">var</span> shell = module.exports = require(<span class="string">'gl-now'</span>)({
+  clearColor: [<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>]
+})
+
+<span class="keyword">var</span> start
+<span class="keyword">var</span> projection = <span class="keyword">new</span> Float32Array(<span class="number">16</span>)
+<span class="keyword">var</span> view = <span class="keyword">new</span> Float32Array(<span class="number">16</span>)
+<span class="keyword">var</span> finishcounter
+<span class="keyword">var</span> postcounter
+<span class="keyword">var</span> shaders
+<span class="keyword">var</span> lights
+<span class="keyword">var</span> camera
+<span class="keyword">var</span> shader
+<span class="keyword">var</span> egg
+
+shell.on(<span class="string">'gl-init'</span>, init)
+shell.on(<span class="string">'gl-error'</span>, <span class="keyword">function</span>() {
+  detection(<span class="string">'WebGL'</span>, <span class="string">'http://get.webgl.org/'</span>)
+})
+
+<span class="keyword">if</span> (!!POST_PROCESSING) {
+  <span class="comment">// Non-intrusive post-processing</span>
+  require(<span class="string">'pp-now'</span>)(shell
+    , defines + require(<span class="string">'../shaders/post-processing.frag'</span>)
+  )
+
+  shell.on(<span class="string">'pp-render'</span>, render)
+  shell.on(<span class="string">'pp-uniforms'</span>, <span class="keyword">function</span>(pp) {
+    <span class="keyword">if</span> (!start) <span class="keyword">return</span>
+
+    <span class="keyword">var</span> lut1 = shell.params.curr[<span class="string">'lut 1'</span>].value
+    <span class="keyword">var</span> lut2 = shell.params.curr[<span class="string">'lut 2'</span>].value
+
+    pp.uniforms.t = t
+    pp.uniforms.r = Math.random()
+    pp.uniforms.uNoiseAmount = <span class="number">0.2</span>
+    pp.uniforms.uMosaic = shell.params.curr[<span class="string">'mosaic amount'</span>].value
+    pp.uniforms.uHazeAmount = shell.params.curr[<span class="string">'haze amount'</span>].value
+    pp.uniforms.uRGBShift = shell.params.curr[<span class="string">'rgb shift'</span>].value
+    pp.uniforms.uVignette = shell.params.curr[<span class="string">'vignette'</span>].value
+    pp.uniforms.uLUT1 = shell.grades[lut1].bind(<span class="number">2</span>)
+    pp.uniforms.uLUT2 = shell.grades[lut2].bind(<span class="number">3</span>)
+    pp.uniforms.uLUT_mix = shell.params.curr[<span class="string">'lut mix'</span>].value
+  })
+} <span class="keyword">else</span> {
+  shell.on(<span class="string">'gl-render'</span>, render)
+}
+
+<span class="keyword">var</span> snapcanvas = lut(<span class="number">33</span>, <span class="number">33</span>, <span class="number">33</span>)
+document.body.appendChild(snapcanvas)
+
+snapcanvas.style.display = <span class="string">'none'</span>
+snapcanvas.style.position = <span class="string">'absolute'</span>
+snapcanvas.style.top = <span class="string">'0'</span>
+snapcanvas.style.left = <span class="string">'0'</span>
+snapcanvas.style.zIndex = <span class="number">9999</span>
+
+<span class="comment">// Hold shift to display a LUT in the</span>
+<span class="comment">// top corner - then you can take a</span>
+<span class="comment">// screenshot to use it for post-processing</span>
+mousetrap.bind(<span class="string">'shift'</span>, <span class="keyword">function</span>() {
+  snapcanvas.style.display = <span class="string">'block'</span>
+}, <span class="string">'keydown'</span>)
+mousetrap.bind(<span class="string">'shift'</span>, <span class="keyword">function</span>() {
+  snapcanvas.style.display = <span class="string">'none'</span>
+}, <span class="string">'keyup'</span>)
+
+<span class="comment">// Log the current settings as JSON</span>
+<span class="comment">// so that we can load them up later!</span>
+mousetrap.bind(<span class="string">'`'</span>, <span class="keyword">function</span>() {
+  <span class="keyword">var</span> params = shell.params.curr
+
+  params = Object.keys(params).reduce(<span class="keyword">function</span>(memo, key) {
+    memo[key] = params[key].value
+    <span class="keyword">if</span> (memo[key].buffer) memo[key] = [].slice.call(memo[key])
+    <span class="keyword">return</span> memo
+  }, {})
+
+  console.log(JSON.stringify(params))
+})
+
+
+<span class="keyword">var</span> eggPosition = [ORIGIN,ORIGIN]
+
+<span class="function"><span class="keyword">function</span> <span class="title">init</span><span class="params">()</span> {</span>
+  <span class="keyword">var</span> gl = shell.gl
+
+  egg = meshify(gl, require(<span class="string">'../models/egg-single.obj'</span>)[<span class="number">0</span>])
+
+  camera = createCamera()
+
+  shell.camera = camera
+  shell.finished = finished
+  shell.params = require(<span class="string">'./param-manager'</span>)(shell)
+  shell.shaders = shaders = require(<span class="string">'./shaders'</span>)(gl)
+  shell.speakers = require(<span class="string">'./speaker-manager'</span>)(gl)
+  shell.field = require(<span class="string">'./terrain-manager'</span>)
+  shell.field.gl = gl
+
+  shell.water = require(<span class="string">'./water'</span>)(shell)
+  shell.trees = require(<span class="string">'./tree-manager'</span>)(shell)
+  shell.shark = require(<span class="string">'./shark-manager'</span>)(shell)
+  shell.lights = require(<span class="string">'./lighting'</span>)({
+      directional: <span class="number">2</span>
+    , point: <span class="number">2</span>
+  })
+
+  <span class="keyword">if</span> (!!START_BUTTON &amp;&amp; !LOOP &amp;&amp; !TWEAKABLE) {
+    <span class="keyword">var</span> button = document.createElement(<span class="string">'div'</span>)
+    button.setAttribute(<span class="string">'class'</span>, <span class="string">'start-button'</span>)
+    button.innerHTML = <span class="string">'BEGIN'</span>
+    setTimeout(<span class="keyword">function</span>() {
+      button.setAttribute(<span class="string">'class'</span>, <span class="string">'start-button visible'</span>)
+    }, <span class="number">500</span>)
+    button.addEventListener(<span class="string">'click'</span>, once(<span class="keyword">function</span>() {
+      button.setAttribute(<span class="string">'class'</span>, <span class="string">'start-button'</span>)
+
+      <span class="keyword">var</span> main = document.getElementById(<span class="string">'main'</span>)
+      <span class="keyword">if</span> (main) main.setAttribute(<span class="string">'class'</span>, <span class="string">'fade-out'</span>)
+
+      setTimeout(<span class="keyword">function</span>() {
+        button.style.display = <span class="string">'none'</span>
+        boot()
+      }, <span class="number">1000</span>)
+      setTimeout(<span class="keyword">function</span>() {
+        <span class="keyword">if</span> (main) main.style.display = <span class="string">'none'</span>
+      }, <span class="number">4000</span>)
+    }))
+    document.body.appendChild(button)
+  } <span class="keyword">else</span> {
+    process.nextTick(boot)
+  }
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">boot</span><span class="params">()</span> {</span>
+  start = <span class="literal">true</span>
+  shell.field.moveTo([
+      s.map.chunk(ORIGIN)|<span class="number">0</span>
+    , s.map.chunk(ORIGIN)|<span class="number">0</span>
+  ])
+
+  shell.timeline = require(<span class="string">'./timeline'</span>)(shell)
+  <span class="keyword">if</span> (!TWEAKABLE) {
+    shell.params.curr[<span class="string">'egg brightness'</span>].value = -<span class="number">1.5</span>
+    shell.song.volume = MUTE ? <span class="number">0</span> : <span class="number">1</span>
+    shell.song.play()
+  } <span class="keyword">else</span> {
+    postcounter = now()
+    finishcounter = <span class="number">1</span>
+  }
+
+  shell.beats = require(<span class="string">'./beats'</span>)(shell)
+
+  <span class="keyword">var</span> presets = require(<span class="string">'./presets.json'</span>)
+  shell.preset = preset
+  <span class="function"><span class="keyword">function</span> <span class="title">preset</span><span class="params">(name)</span> {</span>
+    <span class="keyword">if</span> (!presets[name]) <span class="keyword">return</span>
+    <span class="keyword">var</span> preset = presets[name]
+    Object.keys(preset).forEach(<span class="keyword">function</span>(key) {
+      <span class="keyword">var</span> val = preset[key]
+      val = Array.isArray(val) ? <span class="keyword">new</span> Float32Array(val) : val
+      shell.params.curr[key].value = val
+    })
+  }
+
+  <span class="keyword">if</span> (PRESET &amp;&amp; TWEAKABLE) shell.preset(PRESET)
+
+  <span class="keyword">var</span> pui = require(<span class="string">'./param-ui'</span>)(shell, shell.params.curr)
+  <span class="keyword">if</span> (!!TWEAKABLE) {
+    document.body.appendChild(pui)
+  }
+
+  Object.keys(shell.grades).forEach(<span class="keyword">function</span>(key) {
+    shell.grades[key] = createTexture(shell.gl, shell.grades[key])
+  })
+}
+
+shell.setTime = <span class="keyword">function</span>(_ct) {
+  shell.song.currentTime = _ct / <span class="number">1000</span>
+}
+
+<span class="keyword">var</span> last
+<span class="keyword">var</span> ct = <span class="number">0</span>
+<span class="keyword">var</span> lt = <span class="number">0</span>
+<span class="keyword">var</span> t = <span class="number">0</span>
+<span class="function"><span class="keyword">function</span> <span class="title">tick</span><span class="params">()</span> {</span>
+  lt = ct
+  ct += (((shell.song.currentTime * <span class="number">1000</span>) || <span class="number">0</span>) - ct) * <span class="number">0.06125</span>
+  <span class="keyword">if</span> (!TWEAKABLE) {
+    shell.timeline.ui.tick(ct)
+    shell.timeline.times.step(ct)
+  }
+  <span class="keyword">if</span> (!(t++ % <span class="number">15</span>)) shell.field.moveTo([
+      ((camera.center[<span class="number">0</span>]) * (CHUNK_SIZE))|<span class="number">0</span>
+    , ((camera.center[<span class="number">2</span>]) * (CHUNK_SIZE))|<span class="number">0</span>
+  ])
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">render</span><span class="params">()</span> {</span>
+  <span class="keyword">if</span> (!start) <span class="keyword">return</span>
+
+  <span class="keyword">if</span> (postcounter) {
+    ct += ((now() - postcounter + finishcounter) - ct) * <span class="number">0.06125</span>
+    <span class="keyword">if</span> (!!TWEAKABLE) {
+      tick()
+    } <span class="keyword">else</span> {
+      shell.timeline.times.step(ct)
+    }
+  } <span class="keyword">else</span> {
+    tick()
+    shell.audio.frequencies(shell.frequencies)
+    shell.beatData = shell.beats(Math.abs(ct - lt))
+
+    <span class="keyword">var</span> audioAmplitude = <span class="number">0</span>
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">64</span>; i += <span class="number">1</span>) {
+      audioAmplitude += shell.frequencies[i] / <span class="number">256</span>
+    }
+
+    shell.amplitude = Math.max(<span class="number">0</span>, audioAmplitude - <span class="number">35</span>)
+  }
+
+
+  <span class="comment">/**
+   * Initial Setup
+   */</span>
+  <span class="keyword">var</span> gl = shell.gl
+  <span class="keyword">var</span> params = shell.params.curr
+
+  gl.enable(gl.CULL_FACE)
+  gl.enable(gl.DEPTH_TEST)
+
+  camera.distance = params[<span class="string">'camera distance'</span>].value
+  quat.identity(camera.rotation)
+  quat.rotateY(camera.rotation, camera.rotation, ct * CAMERA_ROTATION + ANGLE_OFFSET + params[<span class="string">'camera spin'</span>].value)
+  quat.rotateX(camera.rotation, camera.rotation, -Math.PI*CAMERA_ANGLE - params[<span class="string">'camera angle'</span>].value)
+
+  shell.clearColor = params[<span class="string">'sky color'</span>].value
+
+  <span class="comment">/**
+   * Lighting
+   */</span>
+  shell.lights.directionals[<span class="number">0</span>].direction = params[<span class="string">'directional dir 1'</span>].value
+  shell.lights.directionals[<span class="number">1</span>].direction = params[<span class="string">'directional dir 2'</span>].value
+  shell.lights.directionals[<span class="number">0</span>].color     = params[<span class="string">'directional color 1'</span>].value
+  shell.lights.directionals[<span class="number">1</span>].color     = params[<span class="string">'directional color 2'</span>].value
+
+  normalize(shell.lights.directionals[<span class="number">0</span>])
+  normalize(shell.lights.directionals[<span class="number">1</span>])
+
+  <span class="keyword">if</span> (!!CONTROLLABLE) {
+    <span class="keyword">var</span> speed = shell.wasDown(<span class="string">'shift'</span>) ? <span class="number">0.2</span> : <span class="number">0.02</span>
+    <span class="keyword">if</span> (shell.wasDown(<span class="string">'W'</span>) || shell.wasDown(<span class="string">'up'</span>))     eggPosition[<span class="number">1</span>] -= speed
+    <span class="keyword">if</span> (shell.wasDown(<span class="string">'S'</span>) || shell.wasDown(<span class="string">'down'</span>))   eggPosition[<span class="number">1</span>] += speed
+    <span class="keyword">if</span> (shell.wasDown(<span class="string">'A'</span>) || shell.wasDown(<span class="string">'left'</span>))   eggPosition[<span class="number">0</span>] -= speed
+    <span class="keyword">if</span> (shell.wasDown(<span class="string">'D'</span>) || shell.wasDown(<span class="string">'right'</span>))  eggPosition[<span class="number">0</span>] += speed
+  }
+
+  <span class="comment">// Setting the position of the primary point light,</span>
+  <span class="comment">// which will in turn inform the position of the egg/seed/rock thing and camera.</span>
+  shell.lights.points[<span class="number">0</span>].position[<span class="number">0</span>] =  CONTROLLABLE ? eggPosition[<span class="number">0</span>] : ORIGIN
+  shell.lights.points[<span class="number">0</span>].position[<span class="number">2</span>] =  CONTROLLABLE ? eggPosition[<span class="number">1</span>] : cameraPosition(ct)
+  shell.lights.points[<span class="number">0</span>].position[<span class="number">1</span>] += (
+      Math.max(
+        terrain(
+            shell.lights.points[<span class="number">0</span>].position[<span class="number">0</span>] * (CHUNK_SIZE - <span class="number">1</span>)
+          , shell.lights.points[<span class="number">0</span>].position[<span class="number">2</span>] * (CHUNK_SIZE - <span class="number">1</span>)
+        ), params[<span class="string">'water level'</span>].value
+      ) + <span class="number">0.15</span>
+    - shell.lights.points[<span class="number">0</span>].position[<span class="number">1</span>]
+  ) * EGG_DRAG
+
+  <span class="keyword">var</span> b = params[<span class="string">'egg brightness'</span>].value
+  <span class="keyword">var</span> c = params[<span class="string">'egg color'</span>].value
+  shell.lights.points[<span class="number">0</span>].color[<span class="number">0</span>] = c[<span class="number">0</span>] * b
+  shell.lights.points[<span class="number">0</span>].color[<span class="number">1</span>] = c[<span class="number">1</span>] * b
+  shell.lights.points[<span class="number">0</span>].color[<span class="number">2</span>] = c[<span class="number">2</span>] * b
+
+  <span class="keyword">if</span> (!!MINIMAP) shell.minimap(
+      (shell.lights.points[<span class="number">0</span>].position[<span class="number">0</span>] * (CHUNK_SIZE - <span class="number">1</span>) / SCALE)
+    , (shell.lights.points[<span class="number">0</span>].position[<span class="number">2</span>] * (CHUNK_SIZE - <span class="number">1</span>) / SCALE)
+  )
+
+  <span class="comment">/**
+   * Camera Setup
+   */</span>
+  shell.camera.center[<span class="number">0</span>] += (shell.lights.points[<span class="number">0</span>].position[<span class="number">0</span>] - shell.camera.center[<span class="number">0</span>]) * CAMERA_DRAG
+  shell.camera.center[<span class="number">1</span>] += (shell.lights.points[<span class="number">0</span>].position[<span class="number">1</span>] - shell.camera.center[<span class="number">1</span>]) * CAMERA_DRAG
+  shell.camera.center[<span class="number">2</span>] += (shell.lights.points[<span class="number">0</span>].position[<span class="number">2</span>] - shell.camera.center[<span class="number">2</span>]) * CAMERA_DRAG
+
+  camera.view(view)
+  mat4.perspective(projection
+    , params.fov.value * Math.PI
+    , shell.width / shell.height
+    , <span class="number">0.05</span>
+    , <span class="number">1000</span>
+  )
+
+  <span class="comment">/**
+   * Water
+   */</span>
+  shader = bootstrapShader(shaders.water)
+  shader.uniforms.uWaterColor = params[<span class="string">'water color'</span>].value
+  shell.water.level = params[<span class="string">'water level'</span>].value
+  shell.water.render(shader)
+
+  <span class="comment">/**
+   * Trees
+   */</span>
+  shader = bootstrapShader(shaders.tree)
+  shader.attributes.aStump.location = <span class="number">2</span>
+  shader.attributes.aCentroid.location = <span class="number">3</span>
+  shader.attributes.aCenter.location = <span class="number">4</span>
+  shell.trees.render(shader)
+
+  <span class="comment">/**
+   * The "egg"
+   */</span>
+  shader = bootstrapShader(shaders.egg)
+  <span class="keyword">var</span> model = mat4.identity(<span class="keyword">new</span> Float32Array(<span class="number">16</span>))
+  <span class="keyword">var</span> eggscale = <span class="number">0.0275</span> + Math.max(<span class="number">0</span>, shell.amplitude - <span class="number">5</span>) * <span class="number">0.001</span>
+  eggscale = [eggscale, eggscale, eggscale]
+
+  mat4.translate(model, model, shell.lights.points[<span class="number">0</span>].position)
+  mat4.scale(model, model, eggscale)
+  mat4.rotateY(model, model, t * <span class="number">0.08</span>)
+
+  shader.uniforms.uModel = model
+  shader.uniforms.uEggColor = params[<span class="string">'egg color'</span>].value
+  shader.uniforms.uAmplitude = shell.amplitude
+  egg.mesh.bind()
+  gl.drawArrays(gl.TRIANGLES, <span class="number">0</span>, egg.length)
+  egg.mesh.unbind()
+
+  <span class="comment">/**
+   * Sharks
+   */</span>
+  shader = bootstrapShader(shaders.shark)
+  shell.shark.render(shader)
+
+  <span class="comment">/**
+   * Speaker Text
+   */</span>
+  shader = bootstrapShader(shaders.speaker)
+  shell.speakers.render(shader)
+
+  <span class="comment">/**
+   * Terrain Rendering
+   */</span>
+  shader = bootstrapShader(shaders.terrain)
+  shader.uniforms.uWaterLevel = shell.water.level + <span class="number">0.1</span>
+  shader.uniforms.uWaterColor = params[<span class="string">'water color'</span>].value
+  shell.field.render(shader, projection, view, shell.camera.center)
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">bootstrapShader</span><span class="params">(shader)</span> {</span>
+  setShader(shader)
+  updateProjection(shader)
+  shell.lights.bind(shader)
+  <span class="keyword">return</span> shader
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">updateProjection</span><span class="params">(shader)</span> {</span>
+  shader.uniforms.uProjection = projection
+  shader.uniforms.uView = view
+  <span class="keyword">return</span> shader
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">setShader</span><span class="params">(shader)</span> {</span>
+  shader.bind()
+  shader.attributes.aPosition.location = <span class="number">0</span>
+  shader.attributes.aNormal.location = <span class="number">1</span>
+  shader.uniforms.t = ct / <span class="number">100</span>
+  shader.uniforms.uSkyColor = shell.params.curr[<span class="string">'sky color'</span>].value
+  shader.uniforms.uEggBrightness = shell.params.curr[<span class="string">'egg brightness'</span>].value
+  <span class="keyword">return</span> shader
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">finished</span><span class="params">()</span> {</span>
+  postcounter = now()
+  finishcounter = ct
+}
+</code></pre>

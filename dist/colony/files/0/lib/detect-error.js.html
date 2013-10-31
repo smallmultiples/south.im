@@ -1,0 +1,51 @@
+<h1>detect-error.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> fs = require(<span class="string">'fs'</span>)
+
+<span class="keyword">var</span> errorTemplate = fs.readFileSync(__dirname + <span class="string">'/detect-error.html'</span>)
+<span class="keyword">var</span> detectedError = <span class="literal">false</span>
+
+module.exports = detectError
+module.exports.passed = <span class="literal">false</span>
+
+<span class="keyword">var</span> support = {
+  audio: (
+    <span class="keyword">typeof</span> AudioContext !== <span class="string">'undefined'</span> ||
+    <span class="keyword">typeof</span> webkitAudioContext !== <span class="string">'undefined'</span>
+  ),
+  workers: !!window.Worker,
+  indexeddb: !!window.indexedDB,
+  webgl: <span class="literal">false</span>
+}
+
+<span class="keyword">try</span> {
+  <span class="keyword">var</span> c = document.createElement(<span class="string">'canvas'</span>)
+  support.webgl = c.getContext(<span class="string">'webgl'</span>) &amp;&amp; <span class="literal">true</span>
+} <span class="keyword">catch</span>(e) {
+  <span class="keyword">try</span> {
+    support.webgl = support.webgl || (c.getContext(<span class="string">'experimental-webgl'</span>) &amp;&amp; <span class="literal">true</span>)
+  } <span class="keyword">catch</span>(e) {
+    support.webgl = <span class="literal">false</span>
+  }
+}
+
+;(<span class="keyword">function</span>() {
+  <span class="keyword">if</span> (!support.webgl) <span class="keyword">return</span> detectError(<span class="string">'WebGL'</span>, <span class="string">'http://get.webgl.org/'</span>)
+  <span class="keyword">if</span> (!support.audio) <span class="keyword">return</span> detectError(<span class="string">'Web Audio API'</span>, <span class="string">'http://www.w3.org/TR/2013/WD-webaudio-20131010/'</span>)
+  <span class="keyword">if</span> (!support.workers) <span class="keyword">return</span> detectError(<span class="string">'Web Worker'</span>, <span class="string">'http://en.wikipedia.org/wiki/Web_worker'</span>)
+  <span class="keyword">if</span> (!support.indexeddb) <span class="keyword">return</span> detectError(<span class="string">'IndexedDB'</span>, <span class="string">'https://developer.mozilla.org/en/docs/IndexedDB'</span>)
+  module.exports.passed = <span class="literal">true</span>
+})()
+
+<span class="function"><span class="keyword">function</span> <span class="title">detectError</span><span class="params">(feature, link)</span> {</span>
+  <span class="keyword">var</span> err = document.createElement(<span class="string">'div'</span>)
+
+  <span class="keyword">if</span> (detectedError) <span class="keyword">return</span>
+  detectedError = <span class="literal">true</span>
+
+  err.innerHTML = errorTemplate
+    .replace(<span class="string">'{{feature}}'</span>, feature)
+    .replace(<span class="string">'{{link}}'</span>, link)
+
+  document.body.appendChild(err)
+}
+</code></pre>

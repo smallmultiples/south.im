@@ -1,0 +1,163 @@
+<h1>param-ui.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> EventEmitter = require(<span class="string">'events'</span>).EventEmitter
+<span class="keyword">var</span> h = require(<span class="string">'hyperscript'</span>)
+<span class="keyword">var</span> clamp = require(<span class="string">'clamp'</span>)
+
+module.exports = paramUI
+
+<span class="keyword">var</span> relabels = {
+    <span class="string">'haze amount'</span>: <span class="string">'Heat Haze'</span>
+  , <span class="string">'mosaic amount'</span>: <span class="string">'Pixellation'</span>
+  , <span class="string">'lut 1'</span>: <span class="string">'Color Grading'</span>
+  , <span class="string">'rgb shift'</span>: <span class="string">'RGB Shift'</span>
+  , <span class="string">'fov'</span>: <span class="string">'Field of View'</span>
+  , <span class="string">'camera spin'</span>: <span class="string">'Camera Spin'</span>
+  , <span class="string">'camera angle'</span>: <span class="string">'Camera Angle'</span>
+  , <span class="string">'camera distance'</span>: <span class="string">'Camera Distance'</span>
+  , <span class="string">'vignette'</span>: <span class="string">'Vignette Color/Opacity'</span>
+  , <span class="string">'water level'</span>: <span class="string">'Water Height'</span>
+  , <span class="string">'water color'</span>: <span class="string">'Water Color'</span>
+  , <span class="string">'egg brightness'</span>: <span class="string">'Point Light Brightness'</span>
+  , <span class="string">'egg color'</span>: <span class="string">'Point Light Color'</span>
+  , <span class="string">'sky color'</span>: <span class="string">'Sky Color'</span>
+  , <span class="string">'directional color 1'</span>: <span class="string">'Sunlight Color 1'</span>
+  , <span class="string">'directional color 2'</span>: <span class="string">'Sunlight Color 2'</span>
+  , <span class="string">'directional dir 1'</span>: <span class="string">'Sunlight Angle 1'</span>
+  , <span class="string">'directional dir 2'</span>: <span class="string">'Sunlight Angle 2'</span>
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">paramUI</span><span class="params">(scene, params)</span> {</span>
+  <span class="keyword">var</span> status = h(<span class="string">'div.status'</span>, <span class="string">'100'</span>)
+  <span class="keyword">var</span> ui = h(<span class="string">'div.sidebar'</span>)
+  <span class="keyword">var</span> lui = h(<span class="string">'div.sidebar.left'</span>)
+  <span class="keyword">var</span> wrap = h(<span class="string">'div'</span>, ui, lui, status)
+
+  <span class="keyword">var</span> emitter = <span class="keyword">new</span> EventEmitter
+  emitter.setMaxListeners(<span class="number">0</span>)
+
+  Object.keys(params).forEach(<span class="keyword">function</span>(key) {
+    <span class="keyword">if</span> (<span class="regexp">/lut (?:2|mix)/g</span>.test(key)) <span class="keyword">return</span>
+    <span class="keyword">var</span> isLeft = params[key].left
+    <span class="keyword">var</span> tweak = tweaker[params[key].type](emitter, isLeft ? lui : ui, params[key], relabels[key] || key, status)
+  })
+
+  document.body.addEventListener(<span class="string">'mousemove'</span>, <span class="keyword">function</span>(e) {
+    emitter.emit(<span class="string">'mousemove'</span>, e)
+  }, <span class="literal">false</span>)
+  document.body.addEventListener(<span class="string">'mouseup'</span>, <span class="keyword">function</span>(e) {
+    status.style.display = <span class="string">'none'</span>
+    document.body.style.cursor = <span class="string">'default'</span>
+    emitter.emit(<span class="string">'mouseup'</span>, e)
+  }, <span class="literal">false</span>)
+  document.body.addEventListener(<span class="string">'mouseleave'</span>, <span class="keyword">function</span>(e) {
+    status.style.display = <span class="string">'none'</span>
+    document.body.style.cursor = <span class="string">'default'</span>
+    emitter.emit(<span class="string">'mouseup'</span>, e)
+  }, <span class="literal">false</span>)
+
+  <span class="keyword">return</span> wrap
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">slider</span><span class="params">(el, events, title, height, status, color)</span> {</span>
+  <span class="keyword">var</span> emitter = <span class="keyword">new</span> EventEmitter
+
+  <span class="keyword">var</span> inner = h(<span class="string">'div.slider-inner'</span>)
+  <span class="keyword">var</span> wrap = emitter.el = h(<span class="string">'div.slider-wrap'</span>, inner)
+  <span class="keyword">var</span> dragging = <span class="literal">false</span>
+  <span class="keyword">var</span> offsetx
+  <span class="keyword">var</span> startx
+  <span class="keyword">var</span> startw
+
+  <span class="keyword">var</span> slider = h(<span class="string">'div.slider'</span>
+    , title ? h(<span class="string">'h2.slider-title'</span>, title) : <span class="string">''</span>
+    , wrap
+  )
+
+  <span class="keyword">if</span> (height) {
+    wrap.style.height = height + <span class="string">'px'</span>
+  }
+
+  status.style.display = <span class="string">'none'</span>
+  wrap.addEventListener(<span class="string">'mousedown'</span>, <span class="keyword">function</span>(e) {
+    status.style.display = <span class="string">'block'</span>
+    document.body.style.cursor = <span class="string">'ew-resize'</span>
+    dragging = <span class="literal">true</span>
+    offsetx = e.offsetX
+    startx = e.x - e.offsetX
+    startw = wrap.getBoundingClientRect().width
+  }, <span class="literal">false</span>)
+
+  events.on(<span class="string">'mousemove'</span>, <span class="keyword">function</span>(e) {
+    <span class="keyword">if</span> (!dragging) <span class="keyword">return</span>
+    <span class="keyword">var</span> percent = clamp((e.x - startx) / startw, <span class="number">0</span>, <span class="number">1</span>)
+    emitter.setPercent(percent)
+    emitter.emit(<span class="string">'update'</span>, percent)
+  }).on(<span class="string">'mouseup'</span>, <span class="keyword">function</span>(e) {
+    dragging = <span class="literal">false</span>
+  })
+
+  <span class="keyword">if</span> (color) {
+    inner.style.backgroundColor = color
+  }
+
+  emitter.setPercent = <span class="keyword">function</span>(percent) {
+    inner.style.width = clamp(percent*<span class="number">100</span>, <span class="number">0</span>, <span class="number">100</span>) + <span class="string">'%'</span>
+  }
+
+  el.appendChild(slider)
+
+  <span class="keyword">return</span> emitter
+}
+
+<span class="keyword">var</span> tweaker = {}
+<span class="keyword">var</span> arrayColors = [
+    <span class="string">'#fcc'</span>
+  , <span class="string">'#cfc'</span>
+  , <span class="string">'#ccf'</span>
+  , <span class="string">'#fff'</span>
+]
+
+tweaker.array = <span class="keyword">function</span>(events, ui, property, title, status) {
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; property.value.length; i++) (<span class="keyword">function</span>(key) {
+    <span class="keyword">var</span> color = arrayColors[i]
+    <span class="keyword">if</span> (property.noColor) color = <span class="string">'#fff'</span>
+    <span class="keyword">var</span> slide = slider(ui, events, i ? <span class="literal">null</span> : title, <span class="number">10</span>, status, color).on(<span class="string">'update'</span>, <span class="keyword">function</span>(percent) {
+      <span class="keyword">var</span> value = property.value[key] = property.min + (property.max - property.min) * percent
+      status.innerText = value.toFixed(<span class="number">3</span>)
+    })
+
+    <span class="keyword">if</span> (i) slide.el.classList.add(<span class="string">'no-top'</span>)
+    <span class="keyword">if</span> (i+<span class="number">1</span> &lt; property.value.length) slide.el.classList.add(<span class="string">'no-bottom'</span>)
+    slide.setPercent((property.value[key] - property.min) / (property.max - property.min))
+  })(i)
+}
+
+tweaker.number = <span class="keyword">function</span>(events, ui, property, title, status) {
+  <span class="keyword">var</span> slide = slider(ui, events, title, <span class="number">14</span>, status).on(<span class="string">'update'</span>, <span class="keyword">function</span>(percent) {
+    <span class="keyword">var</span> value = property.value = property.min + (property.max - property.min) * percent
+    status.innerText = value.toFixed(<span class="number">3</span>)
+  })
+  slide.setPercent((property.value - property.min) / (property.max - property.min))
+}
+
+tweaker.choice = <span class="keyword">function</span>(events, ui, property, title, status) {
+  <span class="keyword">var</span> choice = h(<span class="string">'select'</span>)
+  <span class="keyword">var</span> wrap = h(<span class="string">'div.slider'</span>
+    , title ? h(<span class="string">'h2.slider-title'</span>, title) : <span class="string">''</span>
+    , choice
+  )
+
+  <span class="keyword">var</span> choices = property.choices
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; choices.length; i++) {
+    <span class="keyword">var</span> opt = h(<span class="string">'option'</span>, choices[i])
+    choice.add(opt)
+  }
+
+  choice.value = property.value
+  choice.addEventListener(<span class="string">'change'</span>, <span class="keyword">function</span>() {
+    property.value = choice.value
+  }, <span class="literal">false</span>)
+
+  ui.appendChild(wrap)
+}
+</code></pre>

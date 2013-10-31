@@ -1,0 +1,100 @@
+<h1>tree-manager.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> TREE_DENSITY = require(<span class="string">'../config.json'</span>).trees.density
+<span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+
+<span class="keyword">var</span> EventEmitter = require(<span class="string">'events'</span>).EventEmitter
+<span class="keyword">var</span> terrain = require(<span class="string">'./terrain'</span>)
+<span class="keyword">var</span> biomes = require(<span class="string">'../build/biomes'</span>)
+<span class="keyword">var</span> Tree = require(<span class="string">'./tree'</span>)
+<span class="keyword">var</span> ceil = Math.ceil
+<span class="keyword">var</span> abs = Math.abs
+
+<span class="keyword">var</span> speakers = require(<span class="string">'./speaker-models'</span>).map(<span class="keyword">function</span>(d) {
+  <span class="keyword">return</span> { x: d.x + ORIGIN, y: d.z + ORIGIN }
+})
+
+module.exports = TreeManager
+
+<span class="function"><span class="keyword">function</span> <span class="title">TreeManager</span><span class="params">(shell)</span> {</span>
+  <span class="keyword">var</span> gl = shell.gl
+  <span class="keyword">var</span> self = <span class="keyword">new</span> EventEmitter
+  <span class="keyword">var</span> params = shell.params.curr
+  <span class="keyword">var</span> trees = {}
+
+  shell.field.on(<span class="string">'created'</span>, <span class="keyword">function</span>(chunk) {
+    <span class="keyword">var</span> key = chunk.position.join(<span class="string">'|'</span>)
+    <span class="keyword">var</span> cpx = chunk.position[<span class="number">0</span>]
+    <span class="keyword">var</span> cpy = chunk.position[<span class="number">1</span>]
+    trees[key] = []
+
+    <span class="keyword">var</span> biomelevels = terrain.biome(cpx, cpy)
+
+    allBiomes: <span class="keyword">for</span> (<span class="keyword">var</span> k = <span class="number">0</span>; k &lt; biomelevels.length; k += <span class="number">1</span>) {
+      <span class="keyword">var</span> density = biomes[k].density*biomelevels[k]
+      <span class="keyword">var</span> foliage = biomes[k].foliage
+      <span class="keyword">var</span> lastchance = density % <span class="number">1</span>
+      <span class="keyword">var</span> safezone = biomes[k].safezone || <span class="number">0.3</span>
+
+      density = ceil(density)
+
+      fillPerBiome: <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>, n = <span class="number">0</span>; i &lt; density; i += <span class="number">1</span>) {
+        <span class="keyword">var</span> x = (cpx + Math.random())
+        <span class="keyword">var</span> y = (cpy + Math.random())
+
+        <span class="keyword">if</span> (abs(x - ORIGIN) &lt; safezone) <span class="keyword">continue</span>
+        <span class="keyword">if</span> (i+<span class="number">1</span> >= density &amp;&amp; Math.random() > lastchance) <span class="keyword">continue</span>
+
+        <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; speakers.length; j++) {
+          <span class="keyword">var</span> dx = x-speakers[j].x
+          <span class="keyword">var</span> dy = y-speakers[j].y
+          <span class="keyword">var</span> d = dx*dx + dy*dy
+          <span class="keyword">if</span> (d &lt; <span class="number">0.4</span>) <span class="keyword">continue</span> fillPerBiome
+        }
+
+        trees[key][n++] = <span class="keyword">new</span> Tree(shell, x, y, foliage)
+      }
+    }
+
+    trees[key].sort(<span class="keyword">function</span>(a, b) {
+      <span class="keyword">return</span> a.model.id - b.model.id
+    })
+  }).on(<span class="string">'removed'</span>, <span class="keyword">function</span>(chunk) {
+    <span class="keyword">var</span> key = chunk.position.join(<span class="string">'|'</span>)
+    <span class="keyword">var</span> forest = trees[key]
+    <span class="keyword">delete</span> trees[key]
+  })
+
+  self.render = render
+  <span class="function"><span class="keyword">function</span> <span class="title">render</span><span class="params">(shader)</span> {</span>
+    shader.uniforms.uTreeColor = params[<span class="string">'tree main color'</span>].value
+    shader.uniforms.uTreeStumpColor = params[<span class="string">'tree stump color'</span>].value
+
+    <span class="keyword">for</span> (<span class="keyword">var</span> k <span class="keyword">in</span> trees) {
+      <span class="keyword">var</span> forest = trees[k]
+      <span class="keyword">var</span> size = <span class="number">0</span>
+      <span class="keyword">var</span> last = -<span class="number">1</span>
+      <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; forest.length; i++) {
+        <span class="keyword">var</span> tree = forest[i]
+        <span class="keyword">if</span> (!tree.draw) <span class="keyword">continue</span>
+        <span class="keyword">var</span> curr = tree.model.id
+        shader.uniforms.uModel = tree.matrix
+        <span class="keyword">if</span> (last !== curr) {
+          tree.vertices.bind()
+          size = tree.vertices.length
+          last = curr
+        }
+        gl.drawArrays(gl.TRIANGLES, <span class="number">0</span>, size)
+      }
+      <span class="keyword">if</span> (tree &amp;&amp; tree.vertices)
+        tree.vertices.unbind()
+    }
+  }
+
+  <span class="keyword">return</span> self
+}
+</code></pre>

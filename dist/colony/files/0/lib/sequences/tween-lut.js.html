@@ -1,0 +1,18 @@
+<h1>tween-lut.js</h1>
+<pre><code class="lang-js">module.exports = tweenLUT
+
+<span class="function"><span class="keyword">function</span> <span class="title">tweenLUT</span><span class="params">(params, between, target)</span> {</span>
+  <span class="keyword">var</span> current
+
+  <span class="keyword">return</span> between.on(<span class="string">'start'</span>, <span class="keyword">function</span>() {
+    current = params[<span class="string">'lut 1'</span>].value
+    params[<span class="string">'lut mix'</span>].value = <span class="number">0</span>
+    params[<span class="string">'lut 2'</span>].value = target
+  }).on(<span class="string">'data'</span>, <span class="keyword">function</span>(t) {
+    params[<span class="string">'lut mix'</span>].value = t
+  }).on(<span class="string">'end'</span>, <span class="keyword">function</span>() {
+    params[<span class="string">'lut 1'</span>].value = target
+    params[<span class="string">'lut mix'</span>].value = <span class="number">0</span>
+  })
+}
+</code></pre>

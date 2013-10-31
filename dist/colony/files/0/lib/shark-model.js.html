@@ -1,0 +1,18 @@
+<h1>shark-model.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> model = require(<span class="string">'../models/animals/shark.obj'</span>)
+<span class="keyword">var</span> combine = require(<span class="string">'./combine-mesh'</span>)
+<span class="keyword">var</span> normals = require(<span class="string">'mesh-normals'</span>)
+<span class="keyword">var</span> decode = require(<span class="string">'tab64'</span>).decode
+<span class="keyword">var</span> results = []
+
+<span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; model.length; i += <span class="number">1</span>) {
+  <span class="keyword">var</span> pos = decode(model[i], <span class="string">'float32'</span>)
+  <span class="keyword">var</span> nor = normals(pos)
+  results.push({ positions: pos, normals: nor })
+}
+
+module.exports = {
+  positions: combine(results.map(<span class="keyword">function</span>(n) { <span class="keyword">return</span> n.positions }))
+  , normals: combine(results.map(<span class="keyword">function</span>(n) { <span class="keyword">return</span> n.normals }))
+}
+</code></pre>

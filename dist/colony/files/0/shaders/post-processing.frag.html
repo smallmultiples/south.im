@@ -1,0 +1,140 @@
+<h1>post-processing.frag</h1>
+<pre><code class="lang-js"><span class="keyword">precision</span> <span class="keyword">mediump</span> <span class="keyword">float</span>;
+
+<span class="keyword">uniform</span> <span class="keyword">sampler2D</span> frame;
+<span class="keyword">uniform</span> <span class="keyword">sampler2D</span> depth;
+<span class="keyword">uniform</span> <span class="keyword">vec2</span> frameSize;
+
+<span class="keyword">uniform</span> <span class="keyword">sampler2D</span> uLUT1;
+<span class="keyword">uniform</span> <span class="keyword">sampler2D</span> uLUT2;
+<span class="keyword">uniform</span> <span class="keyword">float</span> uLUT_mix;
+
+<span class="keyword">uniform</span> <span class="keyword">float</span> t;
+<span class="keyword">uniform</span> <span class="keyword">float</span> r;
+<span class="keyword">varying</span> <span class="keyword">vec2</span> uv;
+
+<span class="keyword">uniform</span> <span class="keyword">float</span> uMosaic;
+<span class="keyword">uniform</span> <span class="keyword">float</span> uNoiseAmount;
+<span class="keyword">uniform</span> <span class="keyword">float</span> uHazeAmount;
+<span class="keyword">uniform</span> <span class="keyword">float</span> uRGBShift;
+<span class="keyword">uniform</span> <span class="keyword">vec4</span> uVignette;
+
+<span class="preprocessor">#define NOISE_SCALE 0.41</span>
+<span class="preprocessor">#define NOISE_RATE 100.0</span>
+<span class="preprocessor">#define NOISE_OFFSET vec2(8.92492024, 13.342824)</span>
+
+<span class="preprocessor">#pragma glslify: noise = require(../node_modules/glsl-noise/simplex/2d)</span>
+<span class="preprocessor">#pragma glslify: vignette = require(./lib/vignette)</span>
+<span class="preprocessor">#pragma glslify: tex3D = require(./lib/tex3d)</span>
+
+<span class="keyword">const</span> <span class="keyword">vec3</span> oneThird = <span class="keyword">vec3</span>(<span class="number">1.0</span> / <span class="number">3.0</span>);
+
+<span class="keyword">const</span> <span class="keyword">float</span> hxAmplitude = <span class="number">0.045</span>;
+<span class="keyword">const</span> <span class="keyword">float</span> hxFrequency = <span class="number">44.0</span>;
+<span class="keyword">const</span> <span class="keyword">float</span> hxSpeed = <span class="number">0.6</span>;
+
+<span class="keyword">const</span> <span class="keyword">float</span> hyAmplitude = <span class="number">0.005</span>;
+<span class="keyword">const</span> <span class="keyword">float</span> hyFrequency = <span class="number">9.1</span>;
+<span class="keyword">const</span> <span class="keyword">float</span> hySpeed = <span class="number">0.15</span>;
+
+<span class="keyword">void</span> main() {
+
+<span class="preprocessor">#ifdef USE_HAZE</span>
+  <span class="comment">//</span>
+  <span class="comment">// Creates the heat ripple distortion effect seen in</span>
+  <span class="comment">// the desert/dusk scene.</span>
+  <span class="comment">//</span>
+  <span class="comment">// This is achieved by moving the pixel's sample</span>
+  <span class="comment">// coordinate by a pair of sine waves. The strength</span>
+  <span class="comment">// of the wave is determined by the pixel's distance</span>
+  <span class="comment">// from the camera, which is retrieved from the depth</span>
+  <span class="comment">// buffer.</span>
+  <span class="comment">//</span>
+  <span class="keyword">float</span> cDepth = <span class="built_in">max</span>(<span class="number">0.0</span>, (<span class="built_in">texture2D</span>(depth, uv).x - <span class="number">0.95</span>));
+  <span class="keyword">vec2</span> tuv = uv + uHazeAmount * <span class="keyword">vec2</span>(
+      cDepth * hxAmplitude * <span class="built_in">sin</span>(hxFrequency * uv.x + hxSpeed * t)
+    , cDepth * hyAmplitude * <span class="built_in">sin</span>(hyFrequency * uv.y + hySpeed * t)
+  );
+<span class="preprocessor">#else</span>
+  <span class="keyword">vec2</span> tuv = uv;
+<span class="preprocessor">#endif</span>
+
+<span class="preprocessor">#ifdef USE_MOSAIC</span>
+  <span class="comment">//</span>
+  <span class="comment">// A screen pixellation effect, which didn't make it</span>
+  <span class="comment">// into the final titles. It's simply a matter of</span>
+  <span class="comment">// rounding the sampled pixel coordinates.</span>
+  <span class="comment">//</span>
+  <span class="keyword">if</span> (uMosaic > <span class="number">1.0</span>) {
+    <span class="keyword">vec2</span> dm = <span class="keyword">vec2</span>(uMosaic) / frameSize;
+    tuv = dm * <span class="built_in">ceil</span>(tuv / dm);
+  }
+<span class="preprocessor">#endif</span>
+
+<span class="preprocessor">#ifdef USE_RGB_SHIFT</span>
+  <span class="comment">//</span>
+  <span class="comment">// Shifts the red channel of the screen to the left,</span>
+  <span class="comment">// and the green channel to the right. The end result</span>
+  <span class="comment">// is a pseudo-3D-for-glasses look, and it's used in</span>
+  <span class="comment">// the very beginning and a tiny bit in the desert scene.</span>
+  <span class="comment">//</span>
+  <span class="keyword">vec2</span> shiftDistance = <span class="keyword">vec2</span>(<span class="number">0.0025</span>, <span class="number">0.0015</span>) * uRGBShift;
+  <span class="keyword">float</span> cRed = <span class="built_in">texture2D</span>(frame, tuv + shiftDistance).r;
+  <span class="keyword">float</span> cBlue = <span class="built_in">texture2D</span>(frame, tuv - shiftDistance).b;
+  <span class="keyword">float</span> cGreen = <span class="built_in">texture2D</span>(frame, tuv).g;
+  <span class="keyword">vec4</span> cColor = <span class="keyword">vec4</span>(cRed, cGreen, cBlue, <span class="number">1.0</span>);
+<span class="preprocessor">#else</span>
+  <span class="comment">//</span>
+  <span class="comment">// It's at this point that the pixel color itself</span>
+  <span class="comment">// is sampled, now that we've done all the required</span>
+  <span class="comment">// coordinate mangling :) If the RGB shift is enabled</span>
+  <span class="comment">// then it's done there instead.</span>
+  <span class="comment">//</span>
+  <span class="keyword">vec4</span> cColor = <span class="built_in">texture2D</span>(frame, tuv);
+<span class="preprocessor">#endif</span>
+
+<span class="preprocessor">#ifdef USE_NOISE</span>
+  <span class="comment">//</span>
+  <span class="comment">// Noise/grain, which is always nice in moderation.</span>
+  <span class="comment">// Placing noise before color grading also goes a</span>
+  <span class="comment">// long way when it comes to reducing banding issues</span>
+  <span class="comment">// with only a 33*33*33 color table.</span>
+  <span class="comment">//</span>
+  cColor += (<span class="number">1.0</span> - <span class="built_in">dot</span>(cColor.rgb, oneThird)) * uNoiseAmount * (
+    noise((<span class="built_in">gl_FragCoord</span>.xy + NOISE_OFFSET) * NOISE_SCALE + r * NOISE_RATE)
+  );
+<span class="preprocessor">#endif</span>
+
+<span class="preprocessor">#ifdef USE_GRADING</span>
+  <span class="comment">//</span>
+  <span class="comment">// Color grading - often goes overlooked but definitely</span>
+  <span class="comment">// worth it. Uses two 33*33*33 color lookup tables (LUTs)</span>
+  <span class="comment">// to map the original color to two resulting colors. The</span>
+  <span class="comment">// results are then blended together depending on the</span>
+  <span class="comment">// `uLUT_mix` variable - making it possible to interpolate</span>
+  <span class="comment">// between different palettes.</span>
+  <span class="comment">//</span>
+  <span class="comment">// We could have reduced banding issues by manually</span>
+  <span class="comment">// interpolating colors in the red and green channels</span>
+  <span class="comment">// as well, but time was short. See tex3d.glsl for</span>
+  <span class="comment">// the code needed to emulate 3D textures.</span>
+  <span class="comment">//</span>
+  <span class="keyword">vec3</span> cSampler = <span class="built_in">clamp</span>(cColor.rgb, <span class="keyword">vec3</span>(<span class="number">0.0</span>), <span class="keyword">vec3</span>(<span class="number">1.0</span>));
+  <span class="keyword">vec4</span> cMapped1 = tex3D(uLUT1, cSampler, <span class="number">33.0</span>);
+  <span class="keyword">vec4</span> cMapped2 = tex3D(uLUT2, cSampler, <span class="number">33.0</span>);
+  cColor = <span class="built_in">mix</span>(cMapped1, cMapped2, <span class="built_in">clamp</span>(uLUT_mix, <span class="number">0.0</span>, <span class="number">1.0</span>));
+<span class="preprocessor">#endif</span>
+
+<span class="preprocessor">#ifdef USE_VIGNETTE</span>
+  <span class="comment">//</span>
+  <span class="comment">// Much like noise, the vignette is a traditional</span>
+  <span class="comment">// cinematic/photographic effect which is always worth including.</span>
+  <span class="comment">// It also helps mask some of the banding issues caused by</span>
+  <span class="comment">// color grading, though less so than noise.</span>
+  <span class="comment">//</span>
+  cColor = <span class="keyword">vec4</span>(vignette(cColor.rgb, uVignette.rgb, uv.xy, uVignette.a), <span class="number">1.0</span>);
+<span class="preprocessor">#endif</span>
+
+  <span class="built_in">gl_FragColor</span> = cColor;
+}
+</code></pre>

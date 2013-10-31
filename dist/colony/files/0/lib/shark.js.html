@@ -1,0 +1,22 @@
+<h1>shark.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+
+<span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+
+module.exports = Shark
+
+<span class="function"><span class="keyword">function</span> <span class="title">Shark</span><span class="params">(x, y, z, speed)</span> {</span>
+  <span class="keyword">this</span>.position = <span class="keyword">new</span> Float32Array([x, <span class="number">15</span>, z])
+  <span class="keyword">this</span>.x = x
+  <span class="keyword">this</span>.y = y
+  <span class="keyword">this</span>.z = z
+  <span class="keyword">this</span>.speed = speed
+  <span class="keyword">this</span>.toff = Math.random() * <span class="number">1000</span>
+  <span class="keyword">this</span>.matrix = mat4.identity(<span class="keyword">new</span> Float32Array(<span class="number">16</span>))
+  mat4.scale(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, [<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>])
+}
+</code></pre>

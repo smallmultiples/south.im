@@ -1,0 +1,71 @@
+<h1>shark-manager.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> createBuffer = require(<span class="string">'gl-buffer'</span>)
+<span class="keyword">var</span> createVAO = require(<span class="string">'gl-vao'</span>)
+<span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+<span class="keyword">var</span> perlin = require(<span class="string">'perlin'</span>).noise.perlin2
+
+<span class="keyword">var</span> EventEmitter = require(<span class="string">'events'</span>).EventEmitter
+<span class="keyword">var</span> sharkModel = require(<span class="string">'./shark-model'</span>)
+<span class="keyword">var</span> Shark = require(<span class="string">'./shark'</span>)
+
+module.exports = SharkManager
+
+<span class="function"><span class="keyword">function</span> <span class="title">SharkManager</span><span class="params">(shell)</span> {</span>
+  <span class="keyword">var</span> gl = shell.gl
+  <span class="keyword">var</span> self = <span class="keyword">new</span> EventEmitter
+  <span class="keyword">var</span> params = shell.params.curr
+  <span class="keyword">var</span> sharks = [
+      <span class="keyword">new</span> Shark(<span class="number">0.3</span>, <span class="number">0</span>, <span class="number">0.2</span>, <span class="number">0.05</span>)
+    , <span class="keyword">new</span> Shark(-<span class="number">0.5</span>, <span class="number">0</span>, -<span class="number">0.2</span>, <span class="number">0.08</span>)
+    , <span class="keyword">new</span> Shark(<span class="number">0.25</span>, <span class="number">0</span>, -<span class="number">0.4</span>, <span class="number">0.02</span>)
+  ]
+
+  <span class="keyword">var</span> sharkVertices = createVAO(gl, <span class="literal">null</span>, [{
+      type: gl.FLOAT
+    , size: <span class="number">3</span>
+    , buffer: createBuffer(gl, sharkModel.positions)
+  }, {
+      type: gl.FLOAT
+    , size: <span class="number">3</span>
+    , buffer: createBuffer(gl, sharkModel.normals)
+  }])
+
+  sharkVertices.length = sharkModel.positions.length / <span class="number">3</span>
+
+  <span class="keyword">var</span> scratch = <span class="keyword">new</span> Float32Array(<span class="number">16</span>)
+  <span class="keyword">var</span> scale = <span class="keyword">new</span> Float32Array([<span class="number">0.05</span>, <span class="number">0.05</span>, <span class="number">0.05</span>])
+
+  self.render = render
+  <span class="function"><span class="keyword">function</span> <span class="title">render</span><span class="params">(shader)</span> {</span>
+    <span class="keyword">var</span> size = sharkVertices.length
+    <span class="keyword">var</span> origin = shell.lights.points[<span class="number">0</span>].position
+    <span class="keyword">var</span> height = params[<span class="string">'shark height'</span>].value
+    <span class="keyword">if</span> (height >= <span class="number">2</span>) <span class="keyword">return</span>
+
+    sharkVertices.bind()
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; sharks.length; i += <span class="number">1</span>) {
+      <span class="keyword">var</span> shark = sharks[i]
+
+      shark.position[<span class="number">0</span>] =  origin[<span class="number">0</span>] + shark.x
+      shark.position[<span class="number">0</span>] += perlin(<span class="number">0.2401</span>, shark.position[<span class="number">0</span>]) * <span class="number">0.5</span>
+
+      <span class="keyword">var</span> yoff = (perlin(<span class="number">0.9401</span>, shark.position[<span class="number">0</span>] * <span class="number">20</span>) + <span class="number">0.25</span>) * <span class="number">0.5</span>
+      shark.position[<span class="number">1</span>] += (origin[<span class="number">1</span>] - shark.position[<span class="number">1</span>] + height + shark.y + yoff) * shark.speed
+
+      shark.position[<span class="number">2</span>] =  origin[<span class="number">2</span>] + shark.z
+      shark.position[<span class="number">2</span>] += perlin(<span class="number">0.2401</span>, shark.position[<span class="number">2</span>] * <span class="number">0.5</span>) * <span class="number">0.5</span>
+
+      mat4.identity(scratch)
+      mat4.translate(scratch, scratch, shark.position)
+      mat4.scale(scratch, scratch, scale)
+      shader.uniforms.uModel = scratch
+      shader.uniforms.uOffset = shark.toff
+      gl.drawArrays(gl.TRIANGLES, <span class="number">0</span>, size)
+    }
+
+    sharkVertices.unbind()
+  }
+
+  <span class="keyword">return</span> self
+}
+</code></pre>

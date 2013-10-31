@@ -1,0 +1,27 @@
+<h1>speaker.frag</h1>
+<pre><code class="lang-js"><span class="preprocessor">#pragma import: ./common</span>
+
+<span class="keyword">varying</span> <span class="keyword">vec3</span> vPosition;
+<span class="keyword">varying</span> <span class="keyword">vec3</span> vNormal;
+
+<span class="keyword">vec3</span> getColor() {
+  <span class="keyword">return</span> <span class="keyword">vec3</span>(<span class="number">1.5</span>);
+}
+
+<span class="keyword">void</span> main() {
+  <span class="comment">//</span>
+  <span class="comment">// Unlike the trees and terrain, we're doing per-pixel</span>
+  <span class="comment">// lighting on the speaker names.</span>
+  <span class="comment">//</span>
+  <span class="comment">// It's more expensive but important given that they're</span>
+  <span class="comment">// the objects most susceptible to changes in light</span>
+  <span class="comment">// caused by the eggs movement.</span>
+  <span class="comment">//</span>
+  <span class="keyword">vec3</span> light = getLighting(vNormal
+    , (uModel * <span class="keyword">vec4</span>(vPosition, <span class="number">1.0</span>)).xyz
+  ) * getColor();
+
+  light = <span class="built_in">mix</span>(light, <span class="keyword">vec3</span>(<span class="number">1.0</span>), <span class="number">0.3</span>);
+  <span class="built_in">gl_FragColor</span> = <span class="built_in">mix</span>(<span class="keyword">vec4</span>(light, <span class="number">1.0</span>), FOG_COLOR, fogAmount());
+}
+</code></pre>

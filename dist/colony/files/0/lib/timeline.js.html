@@ -1,0 +1,46 @@
+<h1>timeline.js</h1>
+<pre><code class="lang-js"><span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
+
+<span class="keyword">var</span> EventEmitter = require(<span class="string">'events'</span>).EventEmitter
+<span class="keyword">var</span> inherits = require(<span class="string">'inherits'</span>)
+<span class="keyword">var</span> talkie = require(<span class="string">'talkie'</span>)
+
+module.exports = Timeline
+
+<span class="comment">/**
+ * Edit this area to add parameter sequences
+ * between time frames (in milliseconds)
+ *
+ * Current parameters:
+ *
+ * - 'fov': Field of view
+ * - 'sky color': Sky color in RGB
+ * - 'directional color 1': Sun lighting color 1 in RGB
+ * - 'directional color 2': Sun lighting color 2 in RGB
+ * - 'directional dir 1': Sun lighting direction 1 as a normal vector
+ * - 'directional dir 2': Sun lighting direction 2 as a normal vector
+ * - 'egg brightness': brightness of the egg (and light emission)
+ *
+ * See 'lib/sequences/camera-test.js' for an example sequence
+ * you can use.
+ */</span>
+Timeline.prototype.define = <span class="keyword">function</span>(shell, params, time) {
+  require(<span class="string">'./sequences/camera-test'</span>)(shell, params, time)(<span class="number">0</span>, <span class="number">30000</span>)
+  require(<span class="string">'./sequences/logos'</span>)(shell, params, time)()
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">Timeline</span><span class="params">(shell)</span> {</span>
+  <span class="keyword">if</span> (!(<span class="keyword">this</span> <span class="keyword">instanceof</span> Timeline)) <span class="keyword">return</span> <span class="keyword">new</span> Timeline(shell)
+  EventEmitter.call(<span class="keyword">this</span>)
+
+  <span class="keyword">this</span>.define(
+      <span class="keyword">this</span>.shell = shell
+    , <span class="keyword">this</span>.shell.params.curr
+    , <span class="keyword">this</span>.times = talkie()
+  )
+
+  <span class="keyword">this</span>.ui = require(<span class="string">'./timeline-ui'</span>)(<span class="keyword">this</span>)
+}
+</code></pre>

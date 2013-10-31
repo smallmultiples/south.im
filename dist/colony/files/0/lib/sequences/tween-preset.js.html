@@ -1,0 +1,66 @@
+<h1>tween-preset.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> presets = require(<span class="string">'../presets.json'</span>)
+
+module.exports = tweenPresets
+
+<span class="function"><span class="keyword">function</span> <span class="title">identity</span><span class="params">(t)</span> {</span>
+  <span class="keyword">return</span> t
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">tweenPresets</span><span class="params">(params, between, preset, ease)</span> {</span>
+  <span class="keyword">var</span> previous = {}
+  <span class="keyword">var</span> keys
+
+  ease = ease || identity
+  <span class="keyword">if</span> (<span class="keyword">typeof</span> preset === <span class="string">'string'</span>) {
+    preset = presets[preset]
+  }
+
+  <span class="keyword">return</span> between.on(<span class="string">'start'</span>, <span class="keyword">function</span>() {
+    keys = Object.keys(preset)
+    keys.forEach(<span class="keyword">function</span>(key) {
+      previous[key] = copy(params[key].value)
+    })
+  }).on(<span class="string">'data'</span>, <span class="keyword">function</span>(t) {
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; keys.length; i += <span class="number">1</span>) {
+      tween(
+          previous[keys[i]]
+        , preset[keys[i]]
+        , params[keys[i]]
+        , ease(t)
+      )
+    }
+  }).on(<span class="string">'end'</span>, <span class="keyword">function</span>() {
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; keys.length; i += <span class="number">1</span>) {
+      tween(
+          previous[keys[i]]
+        , preset[keys[i]]
+        , params[keys[i]]
+        , <span class="number">1</span>
+      )
+    }
+  })
+}
+
+<span class="keyword">var</span> slice = Array.prototype.slice
+
+<span class="function"><span class="keyword">function</span> <span class="title">copy</span><span class="params">(val)</span> {</span>
+  <span class="keyword">if</span> (Array.isArray(val)) <span class="keyword">return</span> val.slice()
+  <span class="keyword">if</span> (val <span class="keyword">instanceof</span> Float32Array) {
+    <span class="keyword">return</span> <span class="keyword">new</span> Float32Array(slice.call(val))
+  }
+
+  <span class="keyword">return</span> val
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">tween</span><span class="params">(prev, goal, curr, t)</span> {</span>
+  <span class="keyword">if</span> (goal <span class="keyword">instanceof</span> Float32Array) {
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; goal.length; i += <span class="number">1</span>) {
+      curr.value[i] = prev[i] + (goal[i] - prev[i]) * t
+    }
+  } <span class="keyword">else</span>
+  <span class="keyword">if</span> (<span class="keyword">typeof</span> goal === <span class="string">'number'</span>) {
+    curr.value = prev + (goal - prev) * t
+  }
+}
+</code></pre>

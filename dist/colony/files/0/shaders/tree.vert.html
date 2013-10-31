@@ -1,0 +1,30 @@
+<h1>tree.vert</h1>
+<pre><code class="lang-js"><span class="comment">#pragma import: ./common</span>
+
+<span class="title">uniform</span> vec3 uTreeStumpColor;
+<span class="title">uniform</span> vec3 uTreeColor;
+<span class="title">uniform</span> float uTreePulse;
+
+<span class="title">attribute</span> float aStump;
+<span class="title">attribute</span> vec3 aCentroid;
+<span class="title">attribute</span> vec3 aCenter;
+
+<span class="title">vec3</span> getColor() {
+  <span class="title">return</span> aStump &lt; <span class="number">0</span>.<span class="number">5</span> ? uTreeColor : uTreeStumpColor;
+}
+
+<span class="title">vec3</span> burst(float Z) {
+  <span class="title">return</span> mix(aPosition + aNormal * Z * <span class="number">0</span>.<span class="number">1</span>, aCentroid - aNormal * Z * <span class="number">0</span>.<span class="number">1</span>, Z);
+}
+
+<span class="title">void</span> main() {
+  <span class="title">float</span> Z = (sin(t * <span class="number">0</span>.<span class="number">25</span>) + <span class="number">1</span>.<span class="number">0</span>) * <span class="number">0</span>.<span class="number">5</span>;
+  <span class="title">vec3</span> pos = aStump &lt; <span class="number">0</span>.<span class="number">5</span> ? mix(aCenter, aPosition, mix(<span class="number">1</span>.<span class="number">0</span>, Z * <span class="number">0</span>.<span class="number">5</span> + <span class="number">1</span>.<span class="number">0</span>, uTreePulse)) : aPosition;
+  <span class="title">gl_Position</span> = uProjection * uView * uModel * vec4(pos, <span class="number">1</span>.<span class="number">0</span>);
+
+  <span class="title">vLightWeighting</span> = getLighting(getNormal()
+    , (uModel * vec4(aCentroid, <span class="number">1</span>.<span class="number">0</span>)).xyz
+  ) * getColor();
+}
+
+</code></pre>

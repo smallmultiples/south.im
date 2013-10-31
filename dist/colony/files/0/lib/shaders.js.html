@@ -1,0 +1,47 @@
+<h1>shaders.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> createShader = require(<span class="string">'gl-shader'</span>)
+<span class="keyword">var</span> gldefines = require(<span class="string">'glsl-defines'</span>)
+<span class="keyword">var</span> defines = <span class="string">''</span>
++ gldefines(require(<span class="string">'../config.json'</span>).defines_list)
++ gldefines(require(<span class="string">'../config.json'</span>).defines_values)
+
+module.exports = initShaders
+
+<span class="function"><span class="keyword">function</span> <span class="title">initShaders</span><span class="params">(gl)</span> {</span>
+  <span class="keyword">var</span> vert = gldefines([<span class="string">'VERTEX_SHADER'</span>])   + defines
+  <span class="keyword">var</span> frag = gldefines([<span class="string">'FRAGMENT_SHADER'</span>]) + defines
+  <span class="keyword">var</span> shaders = {}
+
+  shaders.terrain = createShader(gl
+    , vert + require(<span class="string">'../shaders/terrain.vert'</span>)
+    , frag + require(<span class="string">'../shaders/terrain.frag'</span>)
+  )
+
+  shaders.water = createShader(gl
+    , vert + require(<span class="string">'../shaders/water.vert'</span>)
+    , frag + require(<span class="string">'../shaders/water.frag'</span>)
+  )
+
+  shaders.tree = createShader(gl
+    , vert + require(<span class="string">'../shaders/tree.vert'</span>)
+    , frag + require(<span class="string">'../shaders/tree.frag'</span>)
+  )
+
+  shaders.speaker = createShader(gl
+    , vert + require(<span class="string">'../shaders/speaker.vert'</span>)
+    , frag + require(<span class="string">'../shaders/speaker.frag'</span>)
+  )
+
+  shaders.egg = createShader(gl
+    , vert + require(<span class="string">'../shaders/egg.vert'</span>)
+    , frag + require(<span class="string">'../shaders/egg.frag'</span>)
+  )
+
+  shaders.shark = createShader(gl
+    , vert + require(<span class="string">'../shaders/shark.vert'</span>)
+    , frag + require(<span class="string">'../shaders/shark.frag'</span>)
+  )
+
+  <span class="keyword">return</span> shaders
+}
+</code></pre>

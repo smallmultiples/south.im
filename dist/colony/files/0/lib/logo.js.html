@@ -1,0 +1,34 @@
+<h1>logo.js</h1>
+<pre><code class="lang-js">module.exports = Logo
+
+<span class="function"><span class="keyword">function</span> <span class="title">Logo</span><span class="params">(src, width, height, top)</span> {</span>
+  <span class="keyword">if</span> (!(<span class="keyword">this</span> <span class="keyword">instanceof</span> Logo)) <span class="keyword">return</span> <span class="keyword">new</span> Logo(src, width, height, top)
+  <span class="keyword">this</span>.visible = <span class="literal">false</span>
+  width = width || <span class="number">600</span>
+  height = height || <span class="number">200</span>
+  top = top || <span class="number">0.8</span>
+  <span class="keyword">var</span> img = <span class="keyword">this</span>.img = document.createElement(<span class="string">'img'</span>)
+  img.src = <span class="keyword">this</span>.src = src
+  img.style.width = width + <span class="string">'px'</span>
+  img.style.height = height + <span class="string">'px'</span>
+  img.style.position = <span class="string">'absolute'</span>
+  img.style.top = (top * <span class="number">100</span>) + <span class="string">'%'</span>
+  img.style.left = <span class="string">'50%'</span>
+  img.style.marginLeft = <span class="string">'-'</span> + (width/<span class="number">2</span>) + <span class="string">'px'</span>
+  img.style.marginTop = <span class="string">'-'</span> + (height/<span class="number">2</span>) + <span class="string">'px'</span>
+  img.style.zIndex = <span class="number">9999</span>
+  img.style.opacity = <span class="number">0</span>
+  img.style.display = <span class="string">'none'</span>
+  document.body.appendChild(img)
+}
+
+Logo.prototype.fade = <span class="keyword">function</span>(x) {
+  <span class="keyword">var</span> visible = x > <span class="number">0.0001</span>
+  <span class="keyword">var</span> changed = visible !== <span class="keyword">this</span>.visible
+  <span class="keyword">this</span>.img.style.opacity = x
+  <span class="keyword">this</span>.visible = visible
+  <span class="keyword">if</span> (changed) {
+    <span class="keyword">this</span>.img.style.display = visible ? <span class="string">'block'</span> : <span class="string">'none'</span>
+  }
+}
+</code></pre>

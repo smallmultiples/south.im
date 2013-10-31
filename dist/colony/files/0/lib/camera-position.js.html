@@ -1,0 +1,49 @@
+<h1>camera-position.js</h1>
+<pre><code class="lang-js"><span class="comment">// Controls the camera's position</span>
+<span class="comment">// over time. Essentially, it moves in</span>
+<span class="comment">// exclusively in a straight line, but</span>
+<span class="comment">// also slows down in proximity to speaker</span>
+<span class="comment">// names and stops when reaching the mountain.</span>
+
+<span class="keyword">var</span> max = Math.max
+<span class="keyword">var</span> min = Math.min
+<span class="keyword">var</span> sin = Math.sin
+<span class="keyword">var</span> pi = Math.PI
+
+<span class="keyword">const</span> SLOWDOWN_AMOUNT = <span class="number">0.6</span>
+<span class="keyword">const</span> SLOWDOWN_PERIOD = <span class="number">0.00065</span>
+<span class="keyword">const</span> LIMIT = <span class="number">191648</span>
+<span class="keyword">const</span> SPEED = <span class="number">0.000550</span>
+<span class="keyword">const</span> TWEAKABLE = require(<span class="string">'../config.json'</span>).tweakable
+<span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+
+<span class="keyword">if</span> (!TWEAKABLE) {
+  module.exports = <span class="keyword">function</span>(ct) {
+    <span class="keyword">if</span> (ct > LIMIT) ct = LIMIT
+    <span class="keyword">var</span> pos = ORIGIN + ct * SPEED
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; slowdowns.length; i += <span class="number">1</span>) {
+      pos -= sin(min(max((ct - slowdowns[i]) * SLOWDOWN_PERIOD, <span class="number">0</span>), pi)) * SLOWDOWN_AMOUNT
+    }
+    <span class="keyword">return</span> pos
+  }
+
+  module.exports.inverse = <span class="keyword">function</span>(position) {
+    <span class="keyword">var</span> ct = (position - ORIGIN) / SPEED
+    <span class="keyword">return</span> ct > LIMIT ? LIMIT : ct
+  }
+} <span class="keyword">else</span> {
+  module.exports = <span class="keyword">function</span>(ct) {
+    <span class="keyword">return</span> ORIGIN + Math.sin(ct / <span class="number">180000</span>) * <span class="number">110</span>
+  }
+
+  module.exports.inverse = <span class="keyword">function</span>(position) {
+    <span class="keyword">return</span> Math.asin(position / <span class="number">110</span>) * <span class="number">180000</span> - ORIGIN
+  }
+}
+
+<span class="keyword">var</span> slowdowns = module.exports.slowdowns = [LIMIT - <span class="number">1500</span>]
+</code></pre>

@@ -1,0 +1,265 @@
+<h1>logos.js</h1>
+<pre><code class="lang-js"><span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
+
+<span class="keyword">const</span> TWEAKABLE = require(<span class="string">'../../config.json'</span>).tweakable
+<span class="keyword">const</span> LOOP = require(<span class="string">'../../config.json'</span>).loop
+
+<span class="keyword">var</span> EventEmitter = require(<span class="string">'events'</span>).EventEmitter
+<span class="keyword">var</span> duration = require(<span class="string">'../duration'</span>)
+<span class="keyword">var</span> range = require(<span class="string">'../timeline-range'</span>)
+<span class="keyword">var</span> tween = require(<span class="string">'./tween-preset'</span>)
+<span class="keyword">var</span> tweenLUT = require(<span class="string">'./tween-lut'</span>)
+<span class="keyword">var</span> logo = require(<span class="string">'../logo'</span>)
+
+<span class="keyword">var</span> cubic    = require(<span class="string">'./cubic'</span>)
+<span class="keyword">var</span> cubicIn  = require(<span class="string">'./cubic'</span>)[<span class="string">'in'</span>]
+<span class="keyword">var</span> cubicOut = require(<span class="string">'./cubic'</span>)[<span class="string">'out'</span>]
+
+module.exports = <span class="keyword">function</span>(shell, params, time) {
+  <span class="keyword">return</span> <span class="keyword">function</span>(start, end) {
+    <span class="keyword">var</span> presets = {}
+    <span class="keyword">var</span> presetList = []
+    <span class="keyword">var</span> frame = duration(start, end)
+
+    <span class="comment">// Init (darkness, logos)</span>
+    <span class="keyword">if</span> (!TWEAKABLE) {
+      <span class="keyword">var</span> logos = {
+          wds: logo(<span class="string">'img/logo-wds.png'</span>, <span class="number">1052</span>, <span class="number">317</span>, <span class="number">0.5</span>)
+        , thomas: logo(<span class="string">'img/credit-thomas.png'</span>, <span class="number">800</span>, <span class="number">400</span>, <span class="number">0.5</span>)
+        , hugh: logo(<span class="string">'img/credit-hugh.png'</span>, <span class="number">800</span>, <span class="number">400</span>, <span class="number">0.5</span>)
+        , francois: logo(<span class="string">'img/credit-francois.png'</span>, <span class="number">800</span>, <span class="number">400</span>, <span class="number">0.5</span>)
+        , jack: logo(<span class="string">'img/credit-jack.png'</span>, <span class="number">800</span>, <span class="number">400</span>, <span class="number">0.5</span>)
+        , southim: logo(<span class="string">'img/credit-south.png'</span>, <span class="number">800</span>, <span class="number">400</span>, <span class="number">0.5</span>)
+      }
+      params[<span class="string">'lut 1'</span>].value = <span class="string">'harsh-spotlight'</span>
+      params[<span class="string">'rgb shift'</span>].value = <span class="number">2</span>
+      params[<span class="string">'fov'</span>].value = <span class="number">0.05</span>
+      params[<span class="string">'egg brightness'</span>].value = -<span class="number">1.5</span>
+      params[<span class="string">'water level'</span>].value = <span class="number">14.75</span>
+    } <span class="keyword">else</span> {
+      <span class="keyword">var</span> logos = {}
+      <span class="keyword">return</span>
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">logoBetween</span><span class="params">(logo, a, b, c)</span> {</span>
+      c = c || <span class="number">1</span>
+      range(time.between(a, a + <span class="number">1000</span>), <span class="keyword">function</span>(d) { logo.fade(d * c) })
+      range(time.between(b - <span class="number">1000</span>, b), <span class="keyword">function</span>(d) { logo.fade((<span class="number">1</span> - d) * c) })
+    }
+
+    <span class="comment">// Scale out from darkness</span>
+    tween(params, time.between(<span class="number">0</span>, <span class="number">8000</span>), { <span class="string">'egg brightness'</span>: <span class="number">0</span> })
+    tween(params, time.between(<span class="number">9000</span>, <span class="number">20000</span>), { <span class="string">'rgb shift'</span>: <span class="number">0</span> })
+    tween(params, time.between(<span class="number">12000</span>, <span class="number">25000</span>), {
+        <span class="string">'fov'</span>: <span class="number">0.25</span>
+      , <span class="string">'egg brightness'</span>: <span class="number">1.5</span>
+      , <span class="string">'water level'</span>: <span class="number">11.99</span>
+    })
+
+    tweenLUT(params
+      , time.between(<span class="number">14000</span>, <span class="number">20000</span>)
+      , <span class="string">'spotlight'</span>
+    )
+
+
+    <span class="comment">// dawn</span>
+    <span class="keyword">var</span> dawner = time.between(<span class="number">27000</span>, <span class="number">32000</span>)
+    tweenLUT(params, dawner, <span class="string">'sunrise'</span>)
+    tween(params, dawner, presets.sunrise = {
+        <span class="string">'sky color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.525</span>,<span class="number">0.6</span>,<span class="number">0.75</span>,<span class="number">1</span>])
+      , <span class="string">"directional color 1"</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.185</span>,<span class="number">0.12</span>,<span class="number">0.22</span>])
+      , <span class="string">'directional color 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0</span>,<span class="number">0</span>,<span class="number">0.125</span>])
+      , <span class="string">'directional dir 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>])
+      , <span class="string">'directional dir 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,-<span class="number">0.2</span>,<span class="number">0.8</span>])
+      , <span class="string">'tree main color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.39</span>, <span class="number">1</span>, <span class="number">0.645</span>])
+      , <span class="string">'tree stump color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.91</span>,<span class="number">0.15</span>,<span class="number">0.68</span>])
+    })
+
+    <span class="comment">// changing the camera angle to avoid</span>
+    <span class="comment">// terrain clipping</span>
+    tween(params, time.between(<span class="number">28000</span>, <span class="number">30000</span>), { <span class="string">'camera angle'</span>: <span class="number">0.1</span> })
+    tween(params, time.between(<span class="number">32000</span>, <span class="number">34000</span>), { <span class="string">'camera angle'</span>: <span class="number">0</span> })
+    tween(params, time.between(<span class="number">54000</span>, <span class="number">56000</span>), { <span class="string">'camera angle'</span>: <span class="number">0.1</span> })
+    tween(params, time.between(<span class="number">65000</span>, <span class="number">68000</span>), { <span class="string">'camera angle'</span>: <span class="number">0.3</span> })
+    tween(params, time.between(<span class="number">75000</span>, <span class="number">78500</span>), { <span class="string">'camera angle'</span>: -<span class="number">0.2</span> })
+    tween(params, time.between(<span class="number">88000</span>, <span class="number">90000</span>), { <span class="string">'camera angle'</span>: <span class="number">0</span> })
+    tween(params, time.between(<span class="number">160000</span>, <span class="number">163000</span>), { <span class="string">'camera angle'</span>: <span class="number">0.35</span> })
+
+    tween(params, time.between(<span class="number">56000</span>, <span class="number">60000</span>), {
+      <span class="string">'water level'</span>: <span class="number">12.3</span>
+    })
+
+    <span class="comment">// forest</span>
+    <span class="keyword">var</span> forester = time.between(<span class="number">60000</span>, <span class="number">65000</span>)
+    tweenLUT(params, forester, <span class="string">'forest'</span>, cubic)
+    tween(params, forester, presets.forest = {
+        <span class="string">'camera distance'</span>: <span class="number">1.8</span>
+      , <span class="string">'fov'</span>: <span class="number">0.145</span>
+      , <span class="string">'water color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.72</span>,<span class="number">1.03</span>,<span class="number">1.12</span>])
+      , <span class="string">'egg brightness'</span>: <span class="number">1.935</span>
+      , <span class="string">'egg color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.87</span>,<span class="number">0.4</span>,<span class="number">0.5</span>])
+      , <span class="string">'sky color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.76</span>,<span class="number">0.69</span>,<span class="number">0.885</span>,<span class="number">1</span>])
+      , <span class="string">'directional color 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.29</span>,<span class="number">0.455</span>,<span class="number">0.515</span>])
+      , <span class="string">'directional color 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.57</span>,<span class="number">0.24</span>,<span class="number">0.105</span>])
+      , <span class="string">'directional dir 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,<span class="number">0.69</span>,-<span class="number">0.12</span>])
+      , <span class="string">'directional dir 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.47</span>,<span class="number">0.3</span>,<span class="number">1</span>])
+      , <span class="string">'tree main color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.355</span>,<span class="number">1</span>,<span class="number">0.62</span>])
+      , <span class="string">'tree stump color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.825</span>,<span class="number">0.78</span>,<span class="number">0.495</span>])
+    }, cubic)
+
+    <span class="comment">// dusk</span>
+    <span class="keyword">var</span> dusker = time.between(<span class="number">90000</span>, <span class="number">95000</span>)
+    tweenLUT(params, dusker, <span class="string">'dusk-2'</span>)
+    tween(params, dusker, presets.dusk = {
+        <span class="string">'camera distance'</span>: <span class="number">0.835</span>
+      , <span class="string">'fov'</span>:  <span class="number">0.3</span>
+      , <span class="string">'rgb shift'</span>: <span class="number">0.3</span>
+      , <span class="string">'water level'</span>: <span class="number">11.99</span>
+      , <span class="string">'haze amount'</span>: <span class="number">1</span>
+      , <span class="string">'sky color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.895</span>,<span class="number">0.67</span>,<span class="number">0.58</span>,<span class="number">1</span>])
+      , <span class="string">'directional color 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.455</span>,<span class="number">0.275</span>,<span class="number">0.175</span>])
+      , <span class="string">'directional color 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0</span>,<span class="number">0</span>,<span class="number">0.125</span>])
+      , <span class="string">'directional dir 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,-<span class="number">0.2</span>,<span class="number">0.8</span>])
+      , <span class="string">'directional dir 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>])
+      , <span class="string">'egg color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.96</span>,<span class="number">0.5</span>,<span class="number">0.4</span>])
+      , <span class="string">'tree main color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.98</span>,<span class="number">0.85</span>,<span class="number">0.67</span>])
+      , <span class="string">'tree stump color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>])
+      , <span class="string">'vignette'</span>: <span class="keyword">new</span> Float32Array([-<span class="number">0.09</span>,-<span class="number">0.11999999731779099</span>,-<span class="number">0.11</span>,<span class="number">1.034999966621399</span>])
+    })
+
+    tween(params, time.between(<span class="number">114000</span>, <span class="number">119000</span>), { <span class="string">'water level'</span>: <span class="number">12.45</span> }, cubic)
+    tween(params, time.between(<span class="number">123000</span>, <span class="number">126000</span>), { <span class="string">'water level'</span>: <span class="number">12.71</span> }, cubic)
+    tween(params, time.between(<span class="number">148000</span>, <span class="number">152000</span>), { <span class="string">'water level'</span>: <span class="number">12.20</span> }, cubic)
+
+    tween(params, time.between(<span class="number">120000</span>, <span class="number">123000</span>), { <span class="string">'shark height'</span>: <span class="number">0.125</span> })
+    tween(params, time.between(<span class="number">166000</span>, <span class="number">168000</span>), { <span class="string">'shark height'</span>: <span class="number">2</span> })
+
+    <span class="keyword">var</span> bubblegummer = time.between(<span class="number">114000</span>, <span class="number">118000</span>)
+    tweenLUT(params, bubblegummer, <span class="string">'bubblegum'</span>)
+    tween(params, bubblegummer, presets.bubblegum = {
+        <span class="string">'water color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1.12</span>,<span class="number">0.9</span>,<span class="number">1.82</span>])
+      , <span class="string">'haze amount'</span>: <span class="number">0</span>
+      , <span class="string">'rgb shift'</span>: <span class="number">0</span>
+      , <span class="string">'egg brightness'</span>: <span class="number">0.95</span>
+      , <span class="string">'egg color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.775</span>,<span class="number">0.415</span>,<span class="number">1</span>])
+      , <span class="string">'sky color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.81</span>,<span class="number">0.74</span>,<span class="number">1</span>,<span class="number">1</span>])
+      , <span class="string">'directional color 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.715</span>,<span class="number">0.385</span>,<span class="number">0.68</span>])
+      , <span class="string">'directional color 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.73</span>,<span class="number">0.52</span>,<span class="number">0.685</span>])
+      , <span class="string">'directional dir 1'</span>: <span class="keyword">new</span> Float32Array([-<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>])
+      , <span class="string">'directional dir 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,<span class="number">0.1</span>,<span class="number">1</span>])
+      , <span class="string">'tree main color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.56</span>,<span class="number">1</span>,<span class="number">0.56</span>])
+      , <span class="string">'tree stump color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.57</span>,<span class="number">0.995</span>,<span class="number">0.835</span>])
+      , <span class="string">'vignette'</span>: <span class="keyword">new</span> Float32Array([-<span class="number">0.25</span>,-<span class="number">0.25</span>,-<span class="number">0.25</span>,<span class="number">1.001</span>])
+    }, cubic)
+
+    <span class="keyword">var</span> citier = time.between(<span class="number">155000</span>, <span class="number">158200</span>)
+    tweenLUT(params, citier, <span class="string">'city-2'</span>)
+    tween(params, citier, presets.city = {
+        <span class="string">'vignette'</span>: <span class="keyword">new</span> Float32Array([-<span class="number">0.15</span>,-<span class="number">0.12</span>,-<span class="number">0.06</span>,<span class="number">1.125</span>])
+      , <span class="string">'water level'</span>: <span class="number">12.7525</span>
+      , <span class="string">'water color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.36</span>,<span class="number">1.05</span>,<span class="number">1.26</span>])
+      , <span class="string">'egg brightness'</span>: <span class="number">1.715</span>
+      , <span class="string">'egg color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.485</span>,<span class="number">0.654</span>,<span class="number">1</span>])
+      , <span class="string">'sky color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.135</span>,<span class="number">0.28</span>,<span class="number">0.395</span>,<span class="number">1</span>])
+      , <span class="string">'directional color 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0</span>,<span class="number">0.185</span>,<span class="number">0.445</span>])
+      , <span class="string">'directional color 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.385</span>,<span class="number">0.195</span>,<span class="number">0</span>])
+      , <span class="string">'directional dir 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,<span class="number">1</span>,<span class="number">1</span>])
+      , <span class="string">'directional dir 2'</span>: <span class="keyword">new</span> Float32Array([-<span class="number">0.42</span>,-<span class="number">0.32</span>,<span class="number">1</span>])
+      , <span class="string">'tree main color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.995</span>,<span class="number">0.51</span>,<span class="number">0.315</span>])
+      , <span class="string">'tree stump color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.595</span>,<span class="number">0.53</span>,<span class="number">0.285</span>])
+    }, cubicOut)
+
+    tween(params, time.between(<span class="number">164000</span>, <span class="number">170000</span>), {
+        <span class="string">'camera angle'</span>: -<span class="number">0.33</span>
+      , <span class="string">'camera distance'</span>: <span class="number">0.2715</span>
+      , <span class="string">'fov'</span>: <span class="number">0.52</span>
+    })
+
+    <span class="keyword">var</span> canyonify = time.between(<span class="number">187800</span>, <span class="number">192500</span>)
+    tweenLUT(params, canyonify, <span class="string">'canyon'</span>)
+    tween(params, canyonify, presets.canyon = {
+        <span class="string">'camera angle'</span>: <span class="number">0.15</span>
+      , <span class="string">'camera distance'</span>: <span class="number">1.7905</span>
+      , <span class="string">'fov'</span>: <span class="number">0.405</span>
+      , <span class="string">'haze amount'</span>: <span class="number">0.21</span>
+      , <span class="string">'vignette'</span>: <span class="keyword">new</span> Float32Array([-<span class="number">0.45</span>,-<span class="number">0.435</span>,-<span class="number">0.09</span>,<span class="number">0.885</span>])
+      , <span class="string">'water level'</span>: <span class="number">12.85</span>
+      , <span class="string">'water color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.86</span>,<span class="number">1.04</span>,<span class="number">1.32</span>])
+      , <span class="string">'egg brightness'</span>: <span class="number">1.995</span>
+      , <span class="string">'egg color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.67</span>,<span class="number">0.565</span>,<span class="number">0.31</span>])
+      , <span class="string">'sky color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.95</span>,<span class="number">0.95</span>,<span class="number">1</span>,<span class="number">1</span>])
+      , <span class="string">'directional color 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">1</span>,<span class="number">0.565</span>,<span class="number">0.535</span>])
+      , <span class="string">'directional color 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.9</span>,<span class="number">0.46</span>,<span class="number">0</span>])
+      , <span class="string">'directional dir 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.12</span>,<span class="number">0.71</span>,<span class="number">0.04</span>])
+      , <span class="string">'directional dir 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.76</span>,<span class="number">0.81</span>,<span class="number">0.78</span>])
+      , <span class="string">'tree main color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.92</span>,<span class="number">0.56</span>,<span class="number">1</span>])
+      , <span class="string">'tree stump color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.8</span>,<span class="number">0.91</span>,<span class="number">1</span>])
+    })
+
+    tween(params, time.between(<span class="number">185000</span>, <span class="number">186000</span>), { <span class="string">'camera spin'</span>: <span class="number">0</span> })
+    tween(params, time.between(<span class="number">188200</span>, <span class="number">198000</span>), {
+      <span class="string">'camera spin'</span>: Math.PI * <span class="number">1.5</span>
+    }, cubic)
+
+    <span class="keyword">var</span> dur = <span class="number">9800</span> / <span class="number">3</span>
+    <span class="keyword">var</span> a = <span class="number">188200</span>
+    <span class="keyword">var</span> b = a + dur
+    <span class="keyword">var</span> c = b + dur
+    <span class="keyword">var</span> d = c + dur
+
+    tween(params, time.between(a, b), { <span class="string">'camera angle'</span>: -<span class="number">0.45</span> }, cubic)
+    tween(params, time.between(b, c), { <span class="string">'camera angle'</span>: <span class="number">0.4</span> }, cubic)
+    tween(params, time.between(c, d), { <span class="string">'camera angle'</span>: <span class="number">0.15</span> }, cubic)
+
+    tween(params, time.between(<span class="number">199600</span>, <span class="number">225000</span>), {
+        <span class="string">'sky color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>])
+      , <span class="string">'directional color 1'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>])
+      , <span class="string">'directional color 2'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>])
+      , <span class="string">'water color'</span>: <span class="keyword">new</span> Float32Array([<span class="number">0.08</span>*<span class="number">0.75</span>,<span class="number">1.09</span>*<span class="number">0.75</span>,<span class="number">1.43</span>*<span class="number">0.75</span>])
+      , <span class="string">'egg brightness'</span>: <span class="number">1.2</span>
+    }).on(<span class="string">'data'</span>, <span class="keyword">function</span>(d) {
+      shell.canvas.style.webkitFilter = <span class="string">'blur('</span>+(d*<span class="number">10</span>)+<span class="string">'px)'</span>
+    })
+
+    <span class="keyword">if</span> (!TWEAKABLE) {
+      logoBetween(logos.thomas, <span class="number">208000</span>, <span class="number">211000</span>, <span class="number">0.9</span>)
+      logoBetween(logos.hugh, <span class="number">211000</span>, <span class="number">214000</span>, <span class="number">0.9</span>)
+      logoBetween(logos.francois, <span class="number">214000</span>, <span class="number">217000</span>, <span class="number">0.9</span>)
+      logoBetween(logos.jack, <span class="number">217000</span>, <span class="number">220000</span>, <span class="number">0.9</span>)
+      range(time.between(<span class="number">220000</span>, <span class="number">223000</span>), <span class="keyword">function</span>(d) { logos.wds.fade(d) })
+    }
+
+    Object.keys(presets).forEach(<span class="keyword">function</span>(key) {
+      <span class="keyword">if</span> (<span class="regexp">/canyon|bubblegum/</span>.test(key)) <span class="keyword">return</span>
+      presetList.push(presets[key])
+    })
+
+    <span class="keyword">if</span> (LOOP &amp;&amp; TWEAKABLE) setTimeout(<span class="keyword">function</span>() {
+      window.location = window.location
+    }, <span class="number">200000</span>)
+
+    time.between(<span class="number">220000</span>, <span class="number">230000</span>).once(<span class="string">'start'</span>, <span class="keyword">function</span>() {
+      <span class="keyword">if</span> (!!LOOP) setTimeout(<span class="keyword">function</span>() {
+        window.location = window.location
+      }, <span class="number">60000</span>)
+
+      setInterval(<span class="keyword">function</span>() {
+        <span class="keyword">var</span> now = time.prevtime
+        time.reset()
+        <span class="keyword">var</span> combo = presetList[~~(Math.random() * presetList.length)]
+        combo[<span class="string">'rgb shift'</span>] = <span class="number">0</span>
+        combo[<span class="string">'haze amount'</span>] = <span class="number">0</span>
+        combo[<span class="string">'camera angle'</span>] = <span class="number">0.15</span>
+        combo[<span class="string">'haze amount'</span>] = <span class="number">0</span>
+        combo[<span class="string">'camera angle'</span>] = <span class="number">0.15</span>
+        combo[<span class="string">'camera distance'</span>] = <span class="number">1.7905</span>
+        combo[<span class="string">'fov'</span>] = <span class="number">0.405</span>
+        combo[<span class="string">'water level'</span>] = <span class="number">12.85</span>
+        tween(params, time.between(now, now + <span class="number">5000</span>), combo, cubic)
+      }, <span class="number">15000</span>)
+    })
+  }
+}
+</code></pre>

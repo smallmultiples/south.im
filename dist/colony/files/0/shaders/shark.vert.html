@@ -1,0 +1,23 @@
+<h1>shark.vert</h1>
+<pre><code class="lang-js"><span class="preprocessor">#pragma import: ./common</span>
+
+<span class="keyword">uniform</span> <span class="keyword">float</span> uOffset;
+
+<span class="keyword">vec3</span> getColor() {
+  <span class="keyword">return</span> <span class="keyword">vec3</span>(<span class="number">1.0</span>);
+}
+
+<span class="keyword">void</span> main() {
+  <span class="comment">//</span>
+  <span class="comment">// Animating the shark in the shader, just making</span>
+  <span class="comment">// it swim along a sine wave :)</span>
+  <span class="comment">//</span>
+  <span class="keyword">vec3</span> pos = aPosition + <span class="keyword">vec3</span>(<span class="number">0.5</span>, <span class="number">0.0</span>, <span class="number">0.0</span>) * <span class="built_in">sin</span>((t + uOffset) * <span class="number">0.3</span> + aPosition.z * <span class="number">0.5</span>);
+  <span class="built_in">gl_Position</span> = uProjection * uView * uModel * <span class="keyword">vec4</span>(pos, <span class="number">1.0</span>);
+
+  vLightWeighting = getLighting(getNormal()
+    , (uModel * <span class="keyword">vec4</span>(pos, <span class="number">1.0</span>)).xyz
+  ) * getColor();
+}
+
+</code></pre>

@@ -1,0 +1,25 @@
+<h1>centroid.js</h1>
+<pre><code class="lang-js"><span class="comment">// Calculates the centroid positions of</span>
+<span class="comment">// triangular meshes.</span>
+
+module.exports = centroid
+
+<span class="function"><span class="keyword">function</span> <span class="title">centroid</span><span class="params">(mesh)</span> {</span>
+  <span class="keyword">var</span> arr = <span class="keyword">new</span> Float32Array(mesh.length)
+  <span class="keyword">var</span> l = mesh.length
+  <span class="keyword">var</span> n = <span class="number">0</span>
+  <span class="keyword">var</span> m = <span class="number">0</span>
+
+  <span class="keyword">for</span> (<span class="keyword">var</span> v = <span class="number">0</span>; v &lt; l; v += <span class="number">9</span>) {
+    <span class="keyword">var</span> x = mesh[v+<span class="number">0</span>] + mesh[v+<span class="number">3</span>] + mesh[v+<span class="number">6</span>]
+    <span class="keyword">var</span> y = mesh[v+<span class="number">1</span>] + mesh[v+<span class="number">4</span>] + mesh[v+<span class="number">7</span>]
+    <span class="keyword">var</span> z = mesh[v+<span class="number">2</span>] + mesh[v+<span class="number">5</span>] + mesh[v+<span class="number">8</span>]
+
+    arr[v+<span class="number">0</span>] = arr[v+<span class="number">3</span>] = arr[v+<span class="number">6</span>] = x/<span class="number">3</span>
+    arr[v+<span class="number">1</span>] = arr[v+<span class="number">4</span>] = arr[v+<span class="number">7</span>] = y/<span class="number">3</span>
+    arr[v+<span class="number">2</span>] = arr[v+<span class="number">5</span>] = arr[v+<span class="number">8</span>] = z/<span class="number">3</span>
+  }
+
+  <span class="keyword">return</span> arr
+}
+</code></pre>

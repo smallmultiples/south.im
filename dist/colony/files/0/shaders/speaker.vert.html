@@ -1,0 +1,13 @@
+<h1>speaker.vert</h1>
+<pre><code class="lang-js"><span class="comment">#pragma import: ./common</span>
+
+<span class="title">varying</span> vec3 vPosition;
+<span class="title">varying</span> vec3 vNormal;
+
+<span class="title">void</span> main() {
+  <span class="title">gl_Position</span> = uProjection * uView * uModel * vec4(aPosition, <span class="number">1</span>.<span class="number">0</span>);
+  <span class="title">vPosition</span> = aPosition.xyz;
+  <span class="title">vNormal</span> = getNormal();
+}
+
+</code></pre>

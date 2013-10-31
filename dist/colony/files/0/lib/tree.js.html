@@ -1,0 +1,132 @@
+<h1>tree.js</h1>
+<pre><code class="lang-js"><span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> TREE_SCALE_WOBBLE = require(<span class="string">'../config.json'</span>).trees.scale_wobble / <span class="number">2</span>
+<span class="keyword">var</span> tau = Math.PI * <span class="number">2</span>
+
+<span class="keyword">var</span> createBuffer = require(<span class="string">'gl-buffer'</span>)
+<span class="keyword">var</span> createVAO    = require(<span class="string">'gl-vao'</span>)
+<span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+<span class="keyword">var</span> vec3 = require(<span class="string">'gl-matrix'</span>).vec3
+
+<span class="keyword">var</span> terrain = require(<span class="string">'./terrain'</span>)
+<span class="keyword">var</span> combine = require(<span class="string">'./combine-mesh'</span>)
+<span class="keyword">var</span> normals = require(<span class="string">'mesh-normals'</span>)
+<span class="keyword">var</span> decode = require(<span class="string">'tab64'</span>).decode
+<span class="keyword">var</span> centroid = require(<span class="string">'./centroid'</span>)
+
+module.exports = Tree
+
+<span class="keyword">var</span> mids = <span class="number">0</span>
+<span class="keyword">var</span> modelCache = require(<span class="string">'./tree-models'</span>)
+
+<span class="keyword">var</span> models = Object.keys(modelCache).reduce(<span class="keyword">function</span>(models, key) {
+  models[key] = modelCache[key].map(<span class="keyword">function</span>(model) {
+    <span class="keyword">var</span> objects = model.model
+    <span class="keyword">var</span> results = []
+
+    <span class="comment">// Already decoded, use previous</span>
+    <span class="keyword">if</span> (model.meshed) <span class="keyword">return</span> model.meshed
+
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; objects.length; i += <span class="number">1</span>) {
+      <span class="keyword">var</span> opos = decode(objects[i], <span class="string">'float32'</span>)
+      <span class="keyword">var</span> stump = <span class="keyword">new</span> Float32Array(opos.length / <span class="number">3</span>)
+      <span class="keyword">var</span> norm = normals(opos)
+      <span class="keyword">if</span> (model.scale) <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; opos.length; j++) opos[j] *= model.scale
+      <span class="keyword">if</span> (model.sink) <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; opos.length; j++) opos[j] -= model.sink
+      <span class="keyword">var</span> cent = centroid(opos)
+      <span class="keyword">var</span> stumpval = model.stump === i ? <span class="number">1</span> : <span class="number">0</span>
+      <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; stump.length; j++) stump[j] = stumpval
+      <span class="keyword">var</span> cpt = [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+      <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; opos.length; j += <span class="number">3</span>) {
+        cpt[<span class="number">0</span>] += opos[j  ]
+        cpt[<span class="number">1</span>] += opos[j+<span class="number">1</span>]
+        cpt[<span class="number">2</span>] += opos[j+<span class="number">2</span>]
+      }
+      cpt[<span class="number">0</span>] /= opos.length / <span class="number">3</span>
+      cpt[<span class="number">1</span>] /= opos.length / <span class="number">3</span>
+      cpt[<span class="number">2</span>] /= opos.length / <span class="number">3</span>
+      <span class="keyword">var</span> center = <span class="keyword">new</span> Float32Array(opos.length)
+      <span class="keyword">for</span> (<span class="keyword">var</span> j = <span class="number">0</span>; j &lt; opos.length; j += <span class="number">3</span>) {
+        center[j  ] = cpt[<span class="number">0</span>]
+        center[j+<span class="number">1</span>] = cpt[<span class="number">1</span>]
+        center[j+<span class="number">2</span>] = cpt[<span class="number">2</span>]
+      }
+      results[i] = { positions: opos, normals: norm, stump: stump, centroid: cent, center: center }
+    }
+
+    <span class="keyword">var</span> positions = combine(results.map(<span class="keyword">function</span>(d) { <span class="keyword">return</span> d.positions }))
+    <span class="keyword">var</span> centroids = combine(results.map(<span class="keyword">function</span>(d) { <span class="keyword">return</span> d.centroid }))
+    <span class="keyword">var</span> centers = combine(results.map(<span class="keyword">function</span>(d) { <span class="keyword">return</span> d.center }))
+    <span class="keyword">var</span> normal = combine(results.map(<span class="keyword">function</span>(d) { <span class="keyword">return</span> d.normals }))
+    <span class="keyword">var</span> stumps = combine(results.map(<span class="keyword">function</span>(d) { <span class="keyword">return</span> d.stump }))
+
+    model.meshed = {
+      positions: positions
+      , centroids: centroids
+      , centers: centers
+      , normals: normal
+      , stump: stumps
+      , id: mids++
+    }
+
+    <span class="keyword">return</span> model
+  })
+
+  <span class="keyword">return</span> models
+}, {})
+
+<span class="function"><span class="keyword">function</span> <span class="title">Tree</span><span class="params">(shell, x, z, foliage, model)</span> {</span>
+  <span class="keyword">if</span> (!(<span class="keyword">this</span> <span class="keyword">instanceof</span> Tree)) <span class="keyword">return</span> <span class="keyword">new</span> Tree(shell, x, z, foliage, model)
+  <span class="keyword">var</span> group = models[foliage || <span class="string">'trees'</span>]
+  <span class="keyword">if</span> (arguments.length &lt; <span class="number">5</span>) {
+    model = Math.floor(Math.random()*group.length)
+  }
+
+  <span class="keyword">var</span> scale = <span class="number">1</span> + (Math.random() - <span class="number">0.5</span>) * TREE_SCALE_WOBBLE
+  <span class="keyword">var</span> y = terrain(x*(CHUNK_SIZE-<span class="number">1</span>), z*(CHUNK_SIZE-<span class="number">1</span>)) - <span class="number">0.0125</span>
+  <span class="keyword">var</span> gl = shell.gl
+
+  <span class="keyword">this</span>.gl = gl
+  <span class="keyword">this</span>.draw = foliage === <span class="string">'buildings'</span> || y > shell.params.curr[<span class="string">'water level'</span>].value
+  <span class="keyword">this</span>.modelindex = model
+  <span class="keyword">this</span>.model = group[model].meshed
+  <span class="keyword">this</span>.position = [x, y, z]
+  <span class="keyword">this</span>.matrix = mat4.identity(<span class="keyword">new</span> Float32Array(<span class="number">16</span>))
+  mat4.translate(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, <span class="keyword">this</span>.position)
+  mat4.scale(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, [scale,scale,scale])
+  mat4.rotateY(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, (Math.random() * tau))
+  mat4.rotateX(<span class="keyword">this</span>.matrix, <span class="keyword">this</span>.matrix, (Math.random() - <span class="number">0.5</span>) * <span class="number">0.3</span>)
+
+  <span class="keyword">if</span> (<span class="keyword">this</span>.draw &amp;&amp; !<span class="keyword">this</span>.model.vao) {
+    <span class="keyword">this</span>.model.vao = createVAO(gl, <span class="literal">null</span>, [{
+        type: gl.FLOAT
+      , size: <span class="number">3</span>
+      , buffer: createBuffer(gl, <span class="keyword">this</span>.model.positions)
+    }, {
+        type: gl.FLOAT
+      , size: <span class="number">3</span>
+      , buffer: createBuffer(gl, <span class="keyword">this</span>.model.normals)
+    }, {
+        type: gl.FLOAT
+      , size: <span class="number">1</span>
+      , buffer: createBuffer(gl, <span class="keyword">this</span>.model.stump)
+    }, {
+        type: gl.FLOAT
+      , size: <span class="number">3</span>
+      , buffer: createBuffer(gl, <span class="keyword">this</span>.model.centroids)
+    }, {
+        type: gl.FLOAT
+      , size: <span class="number">3</span>
+      , buffer: createBuffer(gl, <span class="keyword">this</span>.model.centers)
+    }])
+    <span class="keyword">this</span>.model.vao.length = <span class="keyword">this</span>.model.positions.length / <span class="number">3</span>
+  }
+
+  <span class="keyword">this</span>.vertices = <span class="keyword">this</span>.model.vao
+}
+
+Tree.prototype.draw = <span class="keyword">function</span>(shader) {
+  <span class="keyword">var</span> vertices = <span class="keyword">this</span>.vertices
+  <span class="keyword">var</span> gl = <span class="keyword">this</span>.gl
+}
+</code></pre>

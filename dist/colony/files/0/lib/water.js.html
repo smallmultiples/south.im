@@ -1,0 +1,68 @@
+<h1>water.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> mat4 = require(<span class="string">'gl-matrix'</span>).mat4
+<span class="keyword">var</span> heightmap = require(<span class="string">'heightmap-mesher'</span>)
+<span class="keyword">var</span> createBuffer = require(<span class="string">'gl-buffer'</span>)
+<span class="keyword">var</span> createVAO = require(<span class="string">'gl-vao'</span>)
+<span class="keyword">var</span> zeros = require(<span class="string">'zeros'</span>)
+
+module.exports = water
+
+<span class="function"><span class="keyword">function</span> <span class="title">water</span><span class="params">(shell)</span> {</span>
+  <span class="keyword">var</span> gl = shell.gl
+  <span class="keyword">var</span> detail = <span class="number">96</span>
+  <span class="keyword">var</span> hm = zeros([detail, detail])
+  <span class="keyword">var</span> positions = heightmap(hm)
+  <span class="keyword">var</span> normals = <span class="keyword">new</span> Float32Array(positions.length)
+  <span class="keyword">var</span> size = positions.length / <span class="number">3</span>
+
+  <span class="comment">// Random "normal" vectors for shading</span>
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; positions.length;) {
+    positions[i] -= <span class="number">0.5</span>
+    normals[i++] = Math.random()
+    normals[i++] = Math.random()
+    positions[i] -= <span class="number">0.5</span>
+    normals[i++] = Math.random()
+  }
+
+  <span class="keyword">var</span> vertices = createVAO(gl, <span class="literal">null</span>, [{
+      type: gl.FLOAT
+    , size: <span class="number">3</span>
+    , buffer: createBuffer(gl, positions)
+  }, {
+      type: gl.FLOAT
+    , size: <span class="number">3</span>
+    , buffer: createBuffer(gl, normals)
+  }])
+
+  <span class="keyword">var</span> matrix = mat4.identity(<span class="keyword">new</span> Float32Array(<span class="number">16</span>))
+  <span class="keyword">var</span> scale = <span class="number">10</span>
+  <span class="keyword">var</span> res = scale / detail
+  <span class="keyword">var</span> translate = [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+
+  scale = [scale, scale, scale]
+  vertices.level = <span class="number">0</span>
+
+  <span class="comment">//</span>
+  <span class="comment">// The water just exists as a grid which is always relative</span>
+  <span class="comment">// to the X/Z position of the camera - effectively, it follows</span>
+  <span class="comment">// the camera around. This makes rendering water a little</span>
+  <span class="comment">// simpler and less expensive.</span>
+  <span class="comment">//</span>
+  vertices.render = <span class="keyword">function</span>(shader) {
+    mat4.identity(matrix)
+    translate[<span class="number">0</span>] = shell.camera.center[<span class="number">0</span>]
+    translate[<span class="number">2</span>] = shell.camera.center[<span class="number">2</span>]
+    translate[<span class="number">1</span>] = vertices.level
+
+    mat4.translate(matrix, matrix, translate)
+    mat4.scale(matrix, matrix, scale)
+    shader.uniforms.uModel = matrix
+
+    vertices.bind()
+    gl.drawArrays(gl.TRIANGLES, <span class="number">0</span>, size)
+    vertices.unbind()
+  }
+
+  <span class="keyword">return</span> vertices
+}
+</code></pre>

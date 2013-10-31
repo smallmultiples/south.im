@@ -1,0 +1,114 @@
+<h1>terrain.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> perlin = require(<span class="string">'perlin'</span>).noise.perlin2
+<span class="keyword">var</span> normalize = require(<span class="string">'vectors/normalize'</span>)(<span class="number">3</span>)
+<span class="keyword">var</span> cross = require(<span class="string">'vectors/cross'</span>)(<span class="number">3</span>)
+<span class="keyword">var</span> sub = require(<span class="string">'vectors/sub'</span>)(<span class="number">3</span>)
+<span class="keyword">var</span> biomes = require(<span class="string">'../build/biomes'</span>)
+<span class="keyword">var</span> shell
+<span class="keyword">var</span> sampler
+
+<span class="keyword">const</span> SIDE_INCREMENT = <span class="number">1</span>
+<span class="keyword">const</span> ORIGIN = (
+  require(<span class="string">'../config.json'</span>).generator.units / <span class="number">2</span> /
+  require(<span class="string">'../config.json'</span>).terrain.chunk_size *
+  require(<span class="string">'../config.json'</span>).generator.scale
+)
+
+
+<span class="keyword">if</span> (process.browser &amp;&amp; <span class="keyword">typeof</span> window !== <span class="string">'undefined'</span>) process.nextTick(<span class="keyword">function</span>() {
+  shell = require(<span class="string">'./shell'</span>)
+})
+
+<span class="comment">// These files are loaded in from config.json as constants,</span>
+<span class="comment">// which are then inlined directly.</span>
+<span class="keyword">const</span> OFFSET_X = require(<span class="string">'../config.json'</span>).terrain.offset[<span class="number">0</span>]
+<span class="keyword">const</span> OFFSET_Y = require(<span class="string">'../config.json'</span>).terrain.offset[<span class="number">1</span>]
+<span class="keyword">const</span> LARGE_WAVE = require(<span class="string">'../config.json'</span>).terrain.large.wave
+<span class="keyword">const</span> LARGE_AMP = require(<span class="string">'../config.json'</span>).terrain.large.amp
+<span class="keyword">const</span> HUGE_WAVE = require(<span class="string">'../config.json'</span>).terrain.huge.wave
+<span class="keyword">const</span> HUGE_AMP = require(<span class="string">'../config.json'</span>).terrain.huge.amp
+<span class="keyword">const</span> MAIN_WAVE = require(<span class="string">'../config.json'</span>).terrain.main.wave
+<span class="keyword">const</span> MAIN_AMP = require(<span class="string">'../config.json'</span>).terrain.main.amp
+<span class="keyword">const</span> SMALL_WAVE = require(<span class="string">'../config.json'</span>).terrain.small.wave
+<span class="keyword">const</span> SMALL_AMP = require(<span class="string">'../config.json'</span>).terrain.small.amp
+<span class="keyword">const</span> TINY_WAVE = require(<span class="string">'../config.json'</span>).terrain.tiny.wave
+<span class="keyword">const</span> TINY_AMP = require(<span class="string">'../config.json'</span>).terrain.tiny.amp
+
+<span class="keyword">const</span> SAMPLER_AMP = require(<span class="string">'../config.json'</span>).terrain.sampler.amp
+<span class="keyword">const</span> SAMPLER_WAVE = require(<span class="string">'../config.json'</span>).terrain.sampler.wave
+
+<span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> MAP_SIZE = require(<span class="string">'../config.json'</span>).generator.chunk
+<span class="keyword">const</span> SCALE = require(<span class="string">'../config.json'</span>).generator.scale
+<span class="keyword">const</span> DNR = <span class="number">256</span>*<span class="number">256</span>
+
+<span class="keyword">var</span> ccc = <span class="number">0</span>
+
+module.exports = terrain
+
+<span class="keyword">var</span> sample = require(<span class="string">'bicubic-sample'</span>)(<span class="function"><span class="keyword">function</span> <span class="title">pixel</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> X = +(x / MAP_SIZE)|<span class="number">0</span>
+  <span class="keyword">var</span> Y = +(y / MAP_SIZE)|<span class="number">0</span>
+  <span class="keyword">var</span> chunk = shell.chunkCache[X]
+  <span class="keyword">return</span> !chunk || !chunk[Y] || x &lt; <span class="number">0</span> || y &lt; <span class="number">0</span> ? <span class="number">0</span> : (
+    chunk[Y].get((x%MAP_SIZE)|<span class="number">0</span>, (y%MAP_SIZE)|<span class="number">0</span>) / DNR
+  )
+})
+
+<span class="function"><span class="keyword">function</span> <span class="title">terrain</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">var</span> value = sample(x / SCALE, y / SCALE)
+  <span class="keyword">var</span> _x = (x/<span class="number">12</span>-ORIGIN*<span class="number">4</span>)
+  <span class="keyword">var</span> _y = (y/<span class="number">12</span>-ORIGIN*<span class="number">4</span>)
+  <span class="keyword">var</span> bio = biomes(_x, _y)
+
+  <span class="keyword">var</span> roughness = <span class="number">0</span>
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; bio.length; i += <span class="number">1</span>) {
+    roughness += biomes[i].roughness * bio[i]
+  }
+
+  <span class="keyword">return</span> roughness ? ( value + roughness * (
+    + perlin(<span class="number">0.54510</span> * x, <span class="number">0.54510</span> * y) * <span class="number">0.0125</span>
+    + perlin(<span class="number">0.03579</span> * x, <span class="number">0.03579</span> * y) * <span class="number">0.135</span>
+    + perlin(<span class="number">0.01579</span> * x, <span class="number">0.01579</span> * y) * <span class="number">0.21</span>
+    - perlin(<span class="number">0.06579</span> * x, <span class="number">0.06579</span> * y) * <span class="number">0.04</span>
+    + perlin(<span class="number">0.13284</span> * x, <span class="number">0.13892</span> * y) * <span class="number">0.03</span>
+    + perlin(<span class="number">0.00579</span> * x, <span class="number">0.00579</span> * y) * <span class="number">0.15</span>
+  )) : value
+}
+
+terrain.biome = biome
+<span class="function"><span class="keyword">function</span> <span class="title">biome</span><span class="params">(x, y)</span> {</span>
+  <span class="keyword">return</span> biomes((x-ORIGIN)*<span class="number">4</span>, (y-ORIGIN)*<span class="number">4</span>)
+}
+
+<span class="keyword">var</span> t = [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+<span class="keyword">var</span> b = [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+<span class="keyword">var</span> r = [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+<span class="keyword">var</span> l = [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+
+terrain.normal = normal
+<span class="function"><span class="keyword">function</span> <span class="title">normal</span><span class="params">(x, y, side)</span> {</span>
+  <span class="keyword">if</span> (!side) side = <span class="number">0.15</span>
+
+  t[<span class="number">0</span>] = x
+  t[<span class="number">1</span>] = terrain(x*CHUNK_SIZE, (y-side)*CHUNK_SIZE)
+  t[<span class="number">2</span>] = y-side
+
+  b[<span class="number">0</span>] = x
+  b[<span class="number">1</span>] = terrain(x*CHUNK_SIZE, (y+side)*CHUNK_SIZE)
+  b[<span class="number">2</span>] = y+side
+
+  r[<span class="number">0</span>] = x+side
+  r[<span class="number">1</span>] = terrain((x+side)*CHUNK_SIZE, y*CHUNK_SIZE),
+  r[<span class="number">2</span>] = y
+
+  l[<span class="number">0</span>] = x-side
+  l[<span class="number">1</span>] = terrain((x-side)*CHUNK_SIZE, y*CHUNK_SIZE)
+  l[<span class="number">2</span>] = y
+
+  sub(t, b)
+  sub(l, r)
+
+  <span class="keyword">return</span> normalize(cross(t, l))
+}
+</code></pre>

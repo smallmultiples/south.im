@@ -1,0 +1,37 @@
+<h1>meshify.js</h1>
+<pre><code class="lang-js"><span class="keyword">var</span> faceNormals = require(<span class="string">'mesh-normals'</span>)
+<span class="keyword">var</span> createBuffer = require(<span class="string">'gl-buffer'</span>)
+<span class="keyword">var</span> decode = require(<span class="string">'tab64'</span>).decode
+<span class="keyword">var</span> createVAO = require(<span class="string">'gl-vao'</span>)
+
+module.exports = meshify
+
+<span class="function"><span class="keyword">function</span> <span class="title">meshify</span><span class="params">(gl, obj)</span> {</span>
+  <span class="keyword">var</span> data = basic(gl, obj)
+  <span class="keyword">var</span> mesh = createVAO(gl, <span class="literal">null</span>, data)
+
+  <span class="keyword">return</span> {
+      mesh: mesh
+    , length: data.size
+  }
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">basic</span><span class="params">(gl, obj)</span> {</span>
+  <span class="keyword">var</span> positions = decode(obj, <span class="string">'float32'</span>)
+  <span class="keyword">var</span> normals = faceNormals(positions)
+
+  <span class="keyword">var</span> data = [{
+      size: <span class="number">3</span>
+    , type: gl.FLOAT
+    , buffer: createBuffer(gl, positions)
+  }, {
+      size: <span class="number">3</span>
+    , type: gl.FLOAT
+    , buffer: createBuffer(gl, normals)
+  }]
+
+  data.size = positions.length / <span class="number">3</span>
+
+  <span class="keyword">return</span> data
+}
+</code></pre>

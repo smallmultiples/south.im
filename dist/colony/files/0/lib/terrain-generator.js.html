@@ -1,0 +1,33 @@
+<h1>terrain-generator.js</h1>
+<pre><code class="lang-js"><span class="comment">//</span>
+<span class="comment">// Responsible for generating indivdual heightmap chunks.</span>
+<span class="comment">// This is passed onto the ndarray-continuous instance</span>
+<span class="comment">// in `lib/terrain-manager.js`.</span>
+<span class="comment">//</span>
+<span class="keyword">var</span> terrain = require(<span class="string">'./terrain'</span>)
+<span class="keyword">var</span> zeros = require(<span class="string">'zeros'</span>)
+<span class="keyword">var</span> cwise = require(<span class="string">'cwise'</span>)
+
+<span class="keyword">const</span> CHUNK_SIZE = require(<span class="string">'../config.json'</span>).terrain.chunk_size
+<span class="keyword">const</span> dims = [CHUNK_SIZE, CHUNK_SIZE]
+
+<span class="keyword">var</span> fill = cwise({
+    args: [<span class="string">'array'</span>, <span class="string">'index'</span>, <span class="string">'scalar'</span>, <span class="string">'scalar'</span>, <span class="string">'scalar'</span>]
+  , funcName: <span class="string">'cwiseTerrainFill'</span>
+  , body: <span class="keyword">function</span>(height, position, x, y, terrain) {
+    height = terrain(position[<span class="number">0</span>]+x, position[<span class="number">1</span>]+y)
+  }
+})
+
+module.exports = getter
+<span class="function"><span class="keyword">function</span> <span class="title">getter</span><span class="params">(pos, next)</span> {</span>
+  <span class="keyword">var</span> array = zeros(dims)
+  <span class="keyword">var</span> x = pos[<span class="number">0</span>] * (CHUNK_SIZE - <span class="number">1</span>)
+  <span class="keyword">var</span> y = pos[<span class="number">1</span>] * (CHUNK_SIZE - <span class="number">1</span>)
+
+  fill(array, x, y, terrain)
+  array.fresh = <span class="literal">true</span>
+
+  <span class="keyword">return</span> next(<span class="literal">null</span>, array)
+}
+</code></pre>

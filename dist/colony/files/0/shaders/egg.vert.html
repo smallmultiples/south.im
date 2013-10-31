@@ -1,0 +1,25 @@
+<h1>egg.vert</h1>
+<pre><code class="lang-js"><span class="comment">// Sorry for all the magic numbers!</span>
+
+<span class="preprocessor">#pragma import: ./common</span>
+<span class="preprocessor">#pragma glslify: noise = require(../node_modules/glsl-noise/simplex/3d)</span>
+
+<span class="keyword">uniform</span> <span class="keyword">vec3</span> uEggColor;
+<span class="keyword">uniform</span> <span class="keyword">float</span> uAmplitude;
+
+
+<span class="keyword">void</span> main() {
+  <span class="comment">// Adds a small amount of noise to the egg's vertices.</span>
+  <span class="keyword">vec3</span> pos = aPosition + noise(aPosition * <span class="number">23.248</span> + <span class="keyword">vec3</span>(t * <span class="number">0.007</span>)) * (<span class="number">0.002</span> + uAmplitude * <span class="number">0.008</span>);
+  <span class="built_in">gl_Position</span> = uProjection * uView * uModel * <span class="keyword">vec4</span>(pos, <span class="number">1.0</span>);
+
+  <span class="comment">// This mixes the final egg shading with a desaturated egg color light</span>
+  <span class="comment">// and a white light - both directional and virtual.</span>
+  vLightWeighting = <span class="keyword">vec3</span>(<span class="built_in">mix</span>(uEggColor, <span class="keyword">vec3</span>(<span class="number">1.0</span>), <span class="number">0.8</span>)) * <span class="built_in">max</span>(<span class="number">0.0</span>, <span class="built_in">dot</span>(getNormal(), <span class="built_in">normalize</span>(<span class="keyword">vec3</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>))))
+    + (
+      <span class="built_in">max</span>(<span class="keyword">vec3</span>(<span class="number">0.0</span>), <span class="keyword">vec3</span>(uEggColor * uEggBrightness * <span class="number">0.6</span>))
+    + <span class="built_in">min</span>(<span class="keyword">vec3</span>(<span class="number">0.0</span>), <span class="keyword">vec3</span>(uEggBrightness * <span class="number">0.6</span>))
+  ) * (<span class="number">0.25</span> + <span class="built_in">max</span>(<span class="number">0.0</span>, <span class="built_in">dot</span>(getNormal(), <span class="built_in">normalize</span>(<span class="keyword">vec3</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, -<span class="number">1.0</span>)))) * <span class="number">0.75</span>);
+}
+
+</code></pre>
