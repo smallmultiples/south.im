@@ -1,0 +1,78 @@
+{
+  "postprocessing": true,
+  "mute": true,
+  "duration": 222000,
+  "timeline": false,
+  "start_button": true,
+  "tweakable": true,
+  "controllable": false,
+  "minimap": false,
+  "loop": false,
+  "preset": "",
+  "defines_list": [
+    "USE_LIGHTING",
+    "USE_FOG",
+    "USE_HAZE",
+    "USE_GRADING",
+    "USE_RGB_SHIFT",
+    "USE_MOSAIC",
+    "USE_VIGNETTE",
+    "USE_NOISE",
+    "WEB_DIRECTIONS_SOUTH"
+  ],
+  "defines_list_disabled": [
+    "USE_DOF",
+    "placeholder"
+  ],
+  "defines_values": {
+    "FOG_DENSITY": "0.575"
+  },
+  "trees": {
+    "density": 1,
+    "scale_wobble": 2
+  },
+  "generator": {
+    "units": 1024,
+    "chunk": 256,
+    "scale": 12
+  },
+  "terrain": {
+    "cache": false,
+    "cache_name": "web-directions-south-011",
+    "chunk_size": 48,
+    "create_radius": 4,
+    "safety_radius": 4,
+    "view_padding": 1.5,
+    "lod": 0,
+    "wobble": 0,
+    "view_height": 2500,
+    "offset": [
+      123.23049,
+      215.05049
+    ],
+    "large": {
+      "wave": 0.0539,
+      "amp": 0.9
+    },
+    "huge": {
+      "wave": 0.0871,
+      "amp": 0.56
+    },
+    "main": {
+      "wave": 0.035,
+      "amp": 0.35
+    },
+    "small": {
+      "wave": 0.1,
+      "amp": 0.07
+    },
+    "tiny": {
+      "wave": 0.5451,
+      "amp": 0.0125
+    },
+    "sampler": {
+      "wave": 0.125,
+      "amp": 0.005
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "name": "wds2013",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "Small Multiples <info@small.mu> (http://small.mu/)",
+  "contributors": [
+    "Hugh Kennedy <hughskennnedy@gmail.com> (http://hughskennedy.com/)",
+    "Francois Robichet <calvein@gmail.com> (http://francois.robichet.com/)",
+    "Jack Zhao <jack@small.mu> (http://small.mu/)"
+  ],
+  "scripts": {
+    "start": "make start"
+  },
+  "glslifyify": [
+    "glslify-import"
+  ],
+  "devDependencies": {
+    "constantify": "~0.1.0",
+    "uglifyify": "0.0.3",
+    "beefy": "~0.4.5",
+    "browserify": "~2.33.1",
+    "uglify-js": "~2.4.0",
+    "glslifyify": "~0.1.1",
+    "glslify-import": "0.0.0",
+    "glslify-stream": "0.0.1",
+    "dot-obj": "0.0.1",
+    "through": "~2.3.4",
+    "indexhtmlify": "~1.0.3",
+    "disc": "~0.3.2",
+    "save-pixels": "~0.3.0",
+    "async": "~0.2.9",
+    "ndarray-fill": "~0.1.0",
+    "colony": "0.0.4",
+    "hacker-deps": "0.0.1",
+    "require-key": "0.0.0",
+    "serve": "~1.3.0",
+    "brfs": "0.0.8"
+  },
+  "dependencies": {
+    "rgb-pack": "0.0.0",
+    "map-async": "~0.1.1",
+    "glsl-point-light": "~0.1.0",
+    "unindex-mesh": "0.0.0",
+    "continuous-storage": "~0.1.0",
+    "level-js": "~1.0.8",
+    "continuous-observer": "~0.2.0",
+    "ndarray-json": "~0.1.0",
+    "get-pixels": "~1.0.1",
+    "tab64": "0.0.1",
+    "clone": "~0.1.10",
+    "mesh-normals": "0.0.0",
+    "gl-buffer": "~0.1.1",
+    "ndarray-continuous": "~0.4.1",
+    "ndarray-group": "0.0.0",
+    "levelup": "~0.17.0",
+    "ndarray-downsample2x": "~0.1.1",
+    "glsl-fog": "0.0.1",
+    "webworkify": "~0.1.0",
+    "orbit-camera": "0.0.1",
+    "gl-matrix": "~2.0.0",
+    "vectors": "~0.1.0",
+    "gl-now": "0.0.4",
+    "gl-vao": "0.0.3",
+    "gl-shader": "0.0.6",
+    "perlin": "~1.0.0",
+    "glsl-defines": "0.0.1",
+    "heightmap-mesher": "0.0.0",
+    "box-frustum": "0.0.0",
+    "worker-query": "0.0.0",
+    "ndarray": "~1.0.8",
+    "zeros": "0.0.0",
+    "cwise": "~0.4.0",
+    "pp-now": "~0.1.0",
+    "glsl-noise": "0.0.0",
+    "right-now": "0.0.0",
+    "image-loaded": "0.0.2",
+    "inherits": "~2.0.1",
+    "soundcloud-badge": "0.0.0",
+    "once": "~1.2.0",
+    "web-audio-analyser": "0.0.0",
+    "hyperscript": "~1.2.2",
+    "clamp": "0.0.0",
+    "mousetrap": "0.0.1",
+    "gl-texture2d": "~0.1.5",
+    "lut": "~0.2.0",
+    "beats": "0.0.0",
+    "talkie": "0.0.0",
+    "bicubic-sample": "0.0.1",
+    "preload": "~0.1.0",
+    "domready": "~0.2.13",
+    "loading-bar": "0.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jiak/wds2013.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jiak/wds2013/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/smallmultiples/south.im/blob/master/MIT-LICENSE.md"
+    },
+    {
+      "type": "MPL",
+      "url": "http://www.mozilla.org/MPL/2.0/index.txt"
+    },
+    {
+      "type": "CC BY-NC-SA",
+      "url": "http://creativecommons.org/licenses/by-nc-sa/3.0/deed.en_US"
+    }
+  ],
+  "private": true
+}

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TECHNOLOGY — SOUTH.IM</title>
+    <script type="text/javascript" src="//use.typekit.net/fgf1fzz.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+    <meta name="viewport" content="width=500px">
+    <link rel="shortcut icon" type="image/x-icon" href="http://www.south.im/favicon.ico">
+
+    <link rel="canonical" href="http://run.south.im/tech/"/>
+    <meta property="og:site_name" content="SOUTH.IM"/>
+    <meta property="og:title" content="TECHNOLOGY"/>
+    <meta itemprop="name" content="TECHNOLOGY"/>
+    <meta property="og:url" content="http://run.south.im/tech/"/>
+    <meta itemprop="url" content="http://run.south.im/tech/"/>
+    <meta property="og:type" content="article"/>
+
+    <style type="text/css">
+    /*
+    html5doctor.com Reset Stylesheet
+    v1.6.1
+    Last Updated: 2010-09-17
+    Author: Richard Clark - http://richclarkdesign.com
+    Twitter: @rich_clark
+    */
+    html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video{margin:0; padding:0; border:0; outline:0; font-size:100%; vertical-align:baseline; background:transparent} body{line-height:1} article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block} nav ul{list-style:none} blockquote,q{quotes:none} blockquote:before,blockquote:after,q:before,q:after{content:''; content:none} a{margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent} ins{background-color:#ff9; color:#000; text-decoration:none} mark{background-color:#ff9; color:#000; font-style:italic; font-weight:bold} del{text-decoration: line-through} abbr[title],dfn[title]{border-bottom:1px dotted; cursor:help} table{border-collapse:collapse; border-spacing:0} hr{display:block; height:1px; border:0; border-top:1px solid #cccccc; margin:1em 0; padding:0} input,select{vertical-align:middle}
+
+      .cf:before, .cf:after { content: " "; display: table; }
+      .cf:after { clear: both; }
+      .cf { *zoom: 1; }
+
+      body, html {
+        /*background-image: url('img/pattern.gif');*/
+        font-family: letter-gothic-std, "sans-serif";
+        color: #222;
+      }
+
+      body {
+        padding:0 0 80px 0;
+        background-image: url('http://static.squarespace.com/static/5263112ee4b083920b8c8009/t/526471b5e4b0002d16182e3f/1382314421329/seeds_03.jpg');
+        background-position: top center;
+        background-size: cover;
+        background-attachment: fixed;
+        background-repeat: repeat;
+      }
+
+      header {
+        background: #000;
+        margin: 0 auto;
+        max-width: 600px;
+        padding: 26px 4em;
+        position: relative;
+        overflow: hidden;
+      }
+
+      h1.logo-text {
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 0;
+        margin: 0;
+        float: left;
+        height: 29px;
+      }
+
+      h1.logo-text a {
+        -webkit-font-smoothing: subpixel-antialiased;
+        color: rgb(255, 255, 255);
+        cursor: auto;
+        display: inline-block;
+        font-family: letter-gothic-std, sans-serif;
+        font-size: 17px;
+        font-style: normal;
+        font-weight: normal;
+        height: 17px;
+        letter-spacing: 2px;
+        line-height: 17px;
+        outline-color: rgb(255, 255, 255);
+        outline-style: none;
+        outline-width: 0px;
+        text-decoration: none;
+        text-transform: uppercase;
+        white-space: nowrap;
+        padding-top: 6px;
+      }
+
+      header ul {
+        padding-left: 33px;
+        list-style: none;
+        list-style-image: none;
+        margin: 0;
+        padding: 0 0 0 33px;
+        font-size: 16px;
+        line-height: 1.8em;
+        letter-spacing: 0px;
+        font-weight: normal;
+        font-style: normal;
+        display: block;
+        float: left;
+      }
+
+      header ul li {
+        text-align: -webkit-match-parent;
+        display: inline-block;
+        margin: 0;
+        margin-right: 10px;
+        position: relative;
+      }
+
+      header ul li a {
+        color: #C3C3C3;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0px;
+        font-weight: normal;
+        font-style: normal;
+        cursor: pointer;
+        border-bottom: 1px solid transparent;
+        text-decoration: none;
+        -webkit-transition: color 0.3s, border-bottom-color 0.3s;
+        -moz-transition: color 0.3s, border-bottom-color 0.3s;
+        -o-transition: color 0.3s, border-bottom-color 0.3s;
+        transition: color 0.3s, border-bottom-color 0.3s;
+      }
+
+      header ul li.active-link a {
+        color:#FFF;
+      }
+
+      header ul li a:hover {
+        border-bottom-color: #fff;
+        color:#FFF;
+      }
+
+      h1 {
+        -webkit-font-smoothing: subpixel-antialiased;
+        display: block;
+        font-size: 34px;
+        font-style: normal;
+        font-weight: bold;
+        height: 40px;
+        letter-spacing: normal;
+        line-height: 40px;
+        text-decoration: none;
+        text-transform: uppercase;
+        margin-bottom: 40px;
+      }
+
+      .tweakable {
+        -webkit-box-shadow: 0 0 12px -2px #000;
+           -moz-box-shadow: 0 0 12px -2px #000;
+            -ms-box-shadow: 0 0 12px -2px #000;
+             -o-box-shadow: 0 0 12px -2px #000;
+                box-shadow: 0 0 12px -2px #000;
+      }
+
+      .wrap {
+        background-color: rgba(255, 255, 255, .95);
+        margin: 0 auto;
+        max-width: 600px;
+        padding-bottom: 3em;
+        padding: 4em;
+      }
+
+      .wrap h2 {
+        -webkit-font-smoothing: subpixel-antialiased;
+        display: block;
+        font-size: 22px;
+        font-style: normal;
+        font-weight: bold;
+        height: 30px;
+        letter-spacing: normal;
+        line-height: 1.4em;
+        text-decoration: none;
+        text-transform: uppercase;
+        -webkit-margin-before: 0.83em;
+        -webkit-margin-after: 0.83em;
+        -webkit-margin-start: 0px;
+        -webkit-margin-end: 0px;
+      }
+
+      .wrap p {
+        font-weight: 400;
+        font-size: 13px;
+        font-size: 16px;
+        line-height: 1.8em;
+        letter-spacing: 0px;
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      .bts {
+        width: 560px;
+        float: left;
+      }
+
+      .experiments {
+        width: 600px;
+        float: right;
+      }
+
+      @media screen and (max-width: 600px) {
+        .wrap {
+          max-width: 400px;
+        }
+
+        .bts, .experiments {
+          width: 400px;
+        }
+      }
+
+      .demo-thumb {
+        float: left;
+        list-style-type: none;
+        margin: 0;
+        margin-right: 10px;
+        padding: 0;
+        padding-bottom: 18px;
+      }
+
+      .demo-thumb a {
+        text-decoration: none;
+      }
+
+      .demo-thumb h3 {
+        width: 190px;
+        color: white;
+        font-size: 14px;
+        line-height: 1.2em;
+        margin-top: 4px;
+        color:#222;
+      }
+
+      .demo-list {
+        padding-top: 8px;
+      }
+
+      .bts p,
+      .experiments p {
+        margin-bottom: 1em;
+      }
+
+      .text a {
+        text-decoration: none;
+        border-bottom: 1px dotted #52ADFF;
+        color: #52ADFF;
+      }
+
+      h1 a {
+        text-decoration: none;
+        color: #222;
+      }
+
+      .error {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        color: #f66;
+        box-sizing: border-box;
+        text-align: center;
+        line-height: 1.5em;
+        padding: 1em;
+        z-index: 9999999;
+        background-color: rgba(0,0,0,0.8);
+      }
+      .error.bottom {
+        top: auto;
+        bottom: 0;
+        color: #fff;
+      }
+
+      .error a {
+        color: #fff;
+        text-decoration: none;
+        border-bottom: 1px solid #fff;
+      }
+
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 class="logo-text">
+        <a href="http://www.south.im/">SOUTH.IM</a>
+      </h1>
+      <ul>
+        <li><a href="http://www.south.im/about/">ABOUT</a></li>
+        <li class="active-link"><a href="#">TECHNOLOGY</a></li>
+        <li><a href="http://run.south.im/">START</a></li>
+      </ul>
+    </header>
+    <section class="wrap cf">
+      <div class="bts">
+        <h1>THE TECHNOLOGY</h1>
+        <p>
+          The demo you see above is a configurable version of the original animation,
+          which we used internally to tweak the scenes so they were just right. It should give
+          you a little more insight into what's going on under the hood, but it's also
+          pretty fun to play with!
+        </p>
+        <p>
+          You'll also notice that we've made some of our early prototypes available,
+          complete with source code, along with a couple of visualisations of the
+          finished project.
+        </p>
+      </div>
+    </section>
+    <iframe class="tweakable" src="tweakable.html" width="100%" height="460" border="0"></iframe>
+    <section class="wrap cf">
+
+      <div class="experiments">
+        <h2>Experiments and Visualisations</h2>
+        <ul class="demo-list">
+          <li class="demo-thumb">
+            <a href="http://hughsk.github.io/poly-terrain-demo" target="_blank">
+              <img src="img/thumb-poly-terrain-demo.jpg">
+              <h3>Low-Poly Terrain</h3>
+            </a>
+          </li>
+          <li class="demo-thumb">
+            <a href="http://hughsk.github.io/glsl-point-light" target="_blank">
+              <img src="img/thumb-glsl-point-light.jpg">
+              <h3>Point Lighting</h3>
+            </a>
+          </li>
+          <li class="demo-thumb">
+            <a href="http://hughsk.github.io/web-audio-analyser" target="_blank">
+              <img src="img/thumb-web-audio-analyser.jpg">
+              <h3>Audio Visualisation</h3>
+            </a>
+          </li>
+          <li class="demo-thumb">
+            <a href="http://hughsk.github.io/audio-poly-terrain-demo" target="_blank">
+              <img src="img/thumb-audio-poly-terrain-demo.jpg">
+              <h3>Audio-Reactive Terrain</h3>
+            </a>
+          </li>
+          <li class="demo-thumb">
+            <a href="dist/disc.html" target="_blank">
+              <img src="img/thumb-disc.jpg">
+              <h3>Repository Structure Visualisation</h3>
+            </a>
+          </li>
+          <li class="demo-thumb">
+            <a href="dist/colony/index.html" target="_blank">
+              <img src="img/thumb-colony.jpg">
+              <h3>Dependency Tree Visualisation</h3>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bts text">
+        <h2>Get the Source!</h2>
+        <p>
+          The opening credits are 100% open source - the code is a little messy but
+          if you're curious how it's all put together you should check out the project
+          on Github at
+          <a href="http://github.com/smallmultiples/south.im">smallmultiples/south.im</a>.
+        </p>
+      </div>
+
+      <div class="experiments text">
+        <h2>Worth Checking Out...</h2>
+        <p>
+          The project is built on top of
+          <a href="http://www.chromeexperiments.com/webgl/">WebGL</a>, the native HTML5
+          API for rendering fast and complex graphics in the browser. Everything was
+          pieced together from modules available on <a href="http://npmjs.org/">npm</a>,
+          using <a href="http://browserify.org">browserify</a> to bundle our JavaScript
+          and <a href="http://github.com/chrisdickinson/glslify">glslify</a> to manage
+          our shaders.
+        </p>
+        <p>
+          Instead of using a full-fledged framework, we opted to use
+          <a href="http://github.com/mikolalysenko">Mikola Lysenko</a>'s
+          <a href="http://github.com/mikolalysenko/gl-now">gl-now</a> along with
+          a few companion modules to abstract away some WebGL's verbosity while still
+          gaining a lot of flexibility.
+        </p>
+        <p>
+          If you're interested in finding out more about the tools we used, have
+          a look at the
+          <a href="https://github.com/smallmultiples/south.im/blob/master/README.md#related-code">README</a>
+          file on Github.
+        </p>
+      </div>
+
+
+    </div>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-25119617-2', 'south.im');
+      ga('send', 'pageview');
+    </script>
+  </body>
+</html>
